@@ -44,6 +44,7 @@ app = FastAPI(
     title="PluriOne - API de Métricas Jurídicas",
     description="""
     Plataforma de backend transaccional y analítico para el área jurídica.
+
     
     **Módulos Principales:**
     1. **Seguridad:** Autenticación mediante tokens JWT.
@@ -55,6 +56,24 @@ app = FastAPI(
         "name": "Abraham Rivera - Residencia Profesional",
     }
 )
+
+@app.on_event("startup")
+def create_initial_admin():
+    db: Session = SessionLocal()
+    # Verifica si ya existe al menos un usuario en la tabla
+    user = db.query(models.Usuario).first()
+    if not user:
+        print("La base de datos está vacía. Creando administrador inicial Pepe Pérez...")
+        hashed_password = get_password_hash("password123")
+        admin = models.Usuario(
+            nombre="Pepe Perez",
+            correo="pepe.perez@plurione.com",
+            rol="Socio Administrador",
+            contrasena_hash=hashed_password
+        )
+        db.add(admin)
+        db.commit()
+    db.close()
 
 @app.get("/dashboard/kpis", tags=["Métricas"])
 def obtener_kpis_principales(db: Session = Depends(database.get_db)):
