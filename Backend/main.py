@@ -59,15 +59,15 @@ app = FastAPI(
 
 @app.on_event("startup")
 def create_initial_admin():
-    db: Session = SessionLocal()
+    db: Session = database.SessionLocal()
     # Verifica si ya existe al menos un usuario en la tabla
     user = db.query(models.Usuario).first()
     if not user:
         print("La base de datos está vacía. Creando administrador inicial Pepe Pérez...")
-        hashed_password = get_password_hash("password123")
+        hashed_password = get_password_hash("contraseña")
         admin = models.Usuario(
             nombre="Pepe Perez",
-            correo="pepe.perez@plurione.com",
+            correo="pepePerez@plurione.com",
             rol="Socio Administrador",
             contrasena_hash=hashed_password
         )
