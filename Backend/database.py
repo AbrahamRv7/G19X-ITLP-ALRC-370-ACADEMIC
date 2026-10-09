@@ -6,8 +6,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # Aquí agregamos el +psycopg2 a la conexión
-SQLALCHEMY_DATABASE_URL = # Borra el os.getenv y pon el link de Render en duro (¡Asegúrate de poner postgresql:// al inicio!)
-SQLALCHEMY_DATABASE_URL = "postgresql://tu_usuario:tu_password@host_de_render.com/plurione-db"
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "DATABASE_URL", 
+    "postgresql://postgres:tu_contraseña_local@localhost:5432/plurione" 
+)
 # Crear el "motor" que se comunicará con PostgreSQL
 if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
     SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
