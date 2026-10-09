@@ -1,0 +1,21 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body, html {
+  width: 100%;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f4f7f6;
+}
+
+/* Esto elimina el margen que Vite le pone por defecto al proyecto */
+#root {
+  width: 100%;
+  max-width: 100% !important;
+  margin: 0 auto;
+  padding: 0 !important;
+  text-align: left;
+}

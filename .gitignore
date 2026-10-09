@@ -1,32 +1,22 @@
 # =========================
 # FRONTEND (React / Vite)
 # =========================
-node_modules/
-dist/
+Frontend/node_modules/
+Frontend/dist/
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # =========================
-# BACKEND (Python / FastAPI)
+# BACKEND & ENTORNOS VIRTUALES
 # =========================
 venv/
+.venv/
 env/
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
 
 # =========================
-# VARIABLES DE ENTORNO Y SECRETOS (¡CRÍTICO!)
+# SECRETOS Y BASES DE DATOS
 # =========================
 .env
-.env.local
-.env.*.local
-*.pem
-
-# =========================
-# BASES DE DATOS LOCALES
-# =========================
-*.sqlite3
 *.db
+*.sqlite3
