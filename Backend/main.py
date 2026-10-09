@@ -7,12 +7,14 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from pydantic import BaseModel
+import models
 from passlib.context import CryptContext
 
 import database
 import models
 import schemas
 import oauth2
+models.Base.metadata.create_all(bind=database.engine)
 SECRET_KEY = "clave_secreta_plurione_2026"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
@@ -59,21 +61,24 @@ app = FastAPI(
 
 @app.on_event("startup")
 def create_initial_admin():
-    db: Session = database.SessionLocal()
-    # Verifica si ya existe al menos un usuario en la tabla
-    user = db.query(models.Usuario).first()
-    if not user:
-        print("La base de datos está vacía. Creando administrador inicial Pepe Pérez...")
-        hashed_password = get_password_hash("contraseña")
-        admin = models.Usuario(
-            nombre="Pepe Perez",
-            correo="pepePerez@plurione.com",
-            rol="Socio Administrador",
-            contrasena_hash=hashed_password
-        )
-        db.add(admin)
-        db.commit()
-    db.close()
+    db: Session = database.SessionLocal() 
+    try:
+        user = db.query(models.Usuario).first()
+        if not user:
+            print("La base de datos está vacía. Creando administrador inicial Pepe Pérez...")
+            hashed_password = get_password_hash("password123")
+            admin = models.Usuario(
+                nombre="Pepe Perez",
+                correo="pepe.perez@plurione.com",
+                rol="Socio Administrador",
+                contrasena_hash=hashed_password
+            )
+            db.add(admin)
+            db.commit()
+    except Exception as e:
+        print(f"Error al crear el administrador: {e}")
+    finally:
+        db.close()
 
 @app.get("/dashboard/kpis", tags=["Métricas"])
 def obtener_kpis_principales(db: Session = Depends(database.get_db)):
