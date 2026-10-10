@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from pydantic import BaseModel
 import models
-from passlib.context import CryptContext
+from oauth2 import get_password_hash
 
 import database
 import models
