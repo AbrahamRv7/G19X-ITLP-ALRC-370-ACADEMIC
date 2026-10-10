@@ -1,8 +1,9 @@
 import enum
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, ForeignKey, Enum as SQLEnum
-from sqlalchemy.sql import func
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, ForeignKey, Enum as SQLEnum, Text
 from sqlalchemy.orm import relationship
 from database import Base
+from sqlalchemy.sql import func
+import enum
 
 class RolUsuario(str, enum.Enum):
     admin = 'admin'
@@ -36,6 +37,7 @@ class Usuario(Base):
     email = Column(String(100), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     rol = Column(SQLEnum(RolUsuario), default=RolUsuario.viewer)
+    expedientes = relationship("Expediente", back_populates="abogado")
     esta_activo = Column(Boolean, default=True)
     creado_en = Column(DateTime, server_default=func.now())
     actualizado_en = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -95,5 +97,48 @@ class HistorialLitigio(Base):
     fecha_cambio = Column(DateTime, server_default=func.now())
 
     litigio = relationship("Litigio", back_populates="historial")
+
+    # 1. Definimos los estados posibles de un expediente
+class EstadoExpediente(str, enum.Enum):
+    abierto = "Abierto"
+    en_proceso = "En Proceso"
+    mediacion = "Mediación"
+    sentencia = "Sentencia"
+    cerrado = "Cerrado"
+
+# 2. Modelo de Clientes
+class Cliente(Base):
+    __tablename__ = "clientes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nombre_completo = Column(String(150), nullable=False)
+    rfc = Column(String(13), unique=True, index=True)
+    correo = Column(String(100), unique=True, index=True)
+    telefono = Column(String(20))
+    creado_en = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relación bidireccional con Expediente
+    expedientes = relationship("Expediente", back_populates="cliente")
+
+# 3. Modelo de Expedientes (El núcleo del sistema)
+class Expediente(Base):
+    __tablename__ = "expedientes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    numero_expediente = Column(String(50), unique=True, index=True, nullable=False)
+    titulo = Column(String(200), nullable=False)
+    descripcion = Column(Text)
+    estado = Column(SQLEnum(EstadoExpediente), default=EstadoExpediente.abierto)
+    
+    # Llaves Foráneas (Foreign Keys)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False)
+    abogado_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False) 
+
+    creado_en = Column(DateTime(timezone=True), server_default=func.now())
+    actualizado_en = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relaciones para navegar los datos fácilmente en Python
+    cliente = relationship("Cliente", back_populates="expedientes")
+    abogado = relationship("Usuario", back_populates="expedientes")
 
     

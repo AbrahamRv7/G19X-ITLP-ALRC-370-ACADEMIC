@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional,List
 from datetime import date, datetime
 
 class ContratoEstatusUpdate(BaseModel):
@@ -208,3 +208,40 @@ class UsuarioCreate(BaseModel):
     class ActualizarFase(BaseModel):
         nueva_fase: str
     comentarios: Optional[str] = None
+
+    # --- SCHEMAS PARA CLIENTE ---
+class ClienteBase(BaseModel):
+    nombre_completo: str
+    rfc: Optional[str] = None
+    correo: Optional[str] = None
+    telefono: Optional[str] = None
+
+class ClienteCreate(ClienteBase):
+    pass
+
+class ClienteResponse(ClienteBase):
+    id: int
+    creado_en: datetime
+
+    class Config:
+        from_attributes = True
+
+# --- SCHEMAS PARA EXPEDIENTE ---
+class ExpedienteBase(BaseModel):
+    numero_expediente: str
+    titulo: str
+    descripcion: Optional[str] = None
+    estado: str = "Abierto"
+    cliente_id: int
+    abogado_id: int
+
+class ExpedienteCreate(ExpedienteBase):
+    pass
+
+class ExpedienteResponse(ExpedienteBase):
+    id: int
+    creado_en: datetime
+    actualizado_en: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

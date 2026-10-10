@@ -7,6 +7,8 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from pydantic import BaseModel
+from typing import List
+from schemas import ClienteResponse, ClienteCreate, ExpedienteResponse, ExpedienteCreate
 
 import database
 import models
@@ -167,6 +169,58 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 @app.get("/", tags=["0. Sistema"], summary="Verificar estado del servidor")
 def leer_raiz(db: Session = Depends(database.get_db)):
     return {"mensaje": "¡Conexión a PostgreSQL y Servidor Activa!"}
+
+# ==========================================
+# RUTAS DE CLIENTES
+# ==========================================
+
+@app.post("/clientes/", response_model=ClienteResponse)
+def crear_cliente(cliente: ClienteCreate, db: Session = Depends(database.get_db)):
+    # Crear el cliente en la base de datos
+    nuevo_cliente = models.Cliente(**cliente.model_dump())
+    db.add(nuevo_cliente)
+    try:
+        db.commit()
+        db.refresh(nuevo_cliente)
+        return nuevo_cliente
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Error al crear el cliente. Revisa si el RFC o correo ya existen.")
+
+@app.get("/clientes/", response_model=List[ClienteResponse])
+def obtener_clientes(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
+    return db.query(models.Cliente).offset(skip).limit(limit).all()
+
+# ==========================================
+# RUTAS DE EXPEDIENTES
+# ==========================================
+
+@app.post("/expedientes/", response_model=ExpedienteResponse)
+def crear_expediente(expediente: ExpedienteCreate, db: Session = Depends(database.get_db)):
+    # 1. Verificar que el cliente exista
+    cliente = db.query(models.Cliente).filter(models.Cliente.id == expediente.cliente_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail="El cliente especificado no existe")
+    
+    # 2. Verificar que el abogado exista
+    abogado = db.query(models.Usuario).filter(models.Usuario.id == expediente.abogado_id).first()
+    if not abogado:
+        raise HTTPException(status_code=404, detail="El abogado especificado no existe")
+
+    # 3. Guardar el expediente
+    nuevo_expediente = models.Expediente(**expediente.model_dump())
+    db.add(nuevo_expediente)
+    try:
+        db.commit()
+        db.refresh(nuevo_expediente)
+        return nuevo_expediente
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Error al crear el expediente. ¿El número de expediente ya está en uso?")
+
+@app.get("/expedientes/", response_model=List[ExpedienteResponse])
+def obtener_expedientes(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
+    return db.query(models.Expediente).offset(skip).limit(limit).all()
 
 @app.post("/login", tags=["Autenticación"])
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
