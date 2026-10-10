@@ -59,6 +59,33 @@ app = FastAPI(
     }
 )
 
+@app.get("/crear-admin-seguro")
+def crear_admin_seguro():
+    db = database.SessionLocal()
+    try:
+        from oauth2 import get_password_hash
+        # Busca si Pepe ya existe para no duplicarlo
+        user = db.query(models.Usuario).filter(models.Usuario.correo == "pepe.perez@plurione.com").first()
+        
+        if user:
+            return {"estatus": "Pepe ya existia en la base de datos", "correo": user.correo}
+        
+        # Si no existe, lo crea a la fuerza
+        nuevo_admin = models.Usuario(
+            nombre="Pepe Perez",
+            correo="pepe.perez@plurione.com",
+            rol="Socio Administrador",
+            contrasena_hash=get_password_hash("password123")
+        )
+        db.add(nuevo_admin)
+        db.commit()
+        return {"estatus": "EXITO: Pepe Perez ha sido creado", "correo": nuevo_admin.correo}
+        
+    except Exception as e:
+        return {"estatus": "ERROR", "detalle": str(e)}
+    finally:
+        db.close()
+
 @app.on_event("startup")
 def create_initial_admin():
     db: Session = database.SessionLocal() 
