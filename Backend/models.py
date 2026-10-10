@@ -70,9 +70,12 @@ class Litigio(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     usuario_responsable_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"))
+    
+    
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True) 
+
     expediente = Column(String(50), unique=True, nullable=False)
     
-    # También blindamos los Enums de los litigios
     materia = Column(SQLEnum(MateriaLitigio, values_callable=lambda obj: [e.value for e in obj]), nullable=False)
     fase_procesal = Column(String(100), nullable=False)
     monto_contingencia = Column(Numeric(15, 2), default=0.00)
@@ -84,6 +87,7 @@ class Litigio(Base):
 
     responsable = relationship("Usuario", back_populates="litigios")
     historial = relationship("HistorialLitigio", back_populates="litigio")
+    cliente = relationship("Cliente")
 
 class HistorialLitigio(Base):
     __tablename__ = "historial_litigios"
