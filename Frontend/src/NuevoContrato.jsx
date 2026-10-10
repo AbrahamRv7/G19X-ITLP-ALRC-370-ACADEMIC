@@ -37,10 +37,13 @@ function NuevoContrato() {
     if (!datosLimpios.monto_operacion) datosLimpios.monto_operacion = 0; // Si está vacío, mandamos 0
     if (!datosLimpios.fecha_firma) datosLimpios.fecha_firma = null;      // Si está vacío, mandamos null
     if (!datosLimpios.fecha_vencimiento) datosLimpios.fecha_vencimiento = null;
+    
     try {
       const token = localStorage.getItem('token');
       console.log("El token que React está intentando enviar es:", token);
-      await api.post('/contratos', formData, datosLimpios, {
+      
+      // CORRECCIÓN AQUÍ: Solo pasamos datosLimpios
+      await api.post('/contratos', datosLimpios, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -137,6 +140,8 @@ function NuevoContrato() {
                   <option value="Borrador">Borrador</option>
                   <option value="En Revisión">En Revisión</option>
                   <option value="Activo">Activo</option>
+                  <option value="Vencido">Vencido</option>
+                  <option value="Terminado">Terminado</option>
                 </select>
               </div>
             </div>

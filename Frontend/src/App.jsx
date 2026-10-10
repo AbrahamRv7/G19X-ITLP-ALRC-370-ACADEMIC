@@ -4,6 +4,7 @@ import Login from './Login';
 import Dashboard from './Dashboard';
 import NuevoContrato from './NuevoContrato';
 import NuevoLitigio from './NuevoLitigio';
+import NuevoCliente from './NuevoCliente'; // <-- 1. IMPORTACIÓN AGREGADA
 import ActualizarJuicio from './ActualizarJuicio';
 import DetalleJuicio from './DetalleJuicio';
 import RegistrarUsuario from './RegistrarUsuario';
@@ -17,7 +18,7 @@ function Layout({ children }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
-      {/* 2. NUEVA ETIQUETA TOASTER (Configurada arriba a la derecha) */}
+      {/* 2. ETIQUETA TOASTER */}
       <Toaster 
         position="top-right" 
         toastOptions={{
@@ -60,6 +61,13 @@ function Layout({ children }) {
             Dashboard
           </Link>
           
+          {/* <-- 2. BOTÓN DE NUEVO CLIENTE AGREGADO --> */}
+          <Link to="/nuevo-cliente" style={{
+            backgroundColor: '#10b981', color: '#ffffff', padding: '8px 18px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600', boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
+          }}>
+            👥 Nuevo Cliente
+          </Link>
+
           <Link to="/nuevo-contrato" style={{
             backgroundColor: '#2563eb', color: '#ffffff', padding: '8px 18px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600', boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)'
           }}>
@@ -90,6 +98,10 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          
+          {/* <-- 3. RUTA DE NUEVO CLIENTE AGREGADA --> */}
+          <Route path="/nuevo-cliente" element={<NuevoCliente />} />
+          
           <Route path="/nuevo-contrato" element={<NuevoContrato />} />
           <Route path="/nuevo-litigio" element={<NuevoLitigio />} />
           <Route path="/actualizar-juicio/:id" element={<ActualizarJuicio />} />
