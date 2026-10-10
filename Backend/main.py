@@ -8,7 +8,6 @@ from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from pydantic import BaseModel
 import models
-from oauth2 import get_password_hash
 
 import database
 import models
@@ -29,6 +28,29 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+@app.on_event("startup")
+def create_initial_admin():
+    db: Session = database.SessionLocal() 
+    try:
+        user = db.query(models.Usuario).first()
+        if not user:
+            print("La base de datos está vacía. Creando administrador inicial Pepe Pérez...")
+            # Usamos el encriptador directo
+            hashed_password = pwd_context.hash("password123")
+            admin = models.Usuario(
+                nombre="Pepe Perez",
+                correo="pepe.perez@plurione.com",
+                rol="Socio Administrador",
+                contrasena_hash=hashed_password
+            )
+            db.add(admin)
+            db.commit()
+            print("¡Pepe Perez creado con éxito!")
+    except Exception as e:
+        print(f"Error al crear el administrador: {e}")
+    finally:
+        db.close()
 
 def obtener_hash_password(password: str):
     return pwd_context.hash(password)
