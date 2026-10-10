@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// La URL de tu backend en Render
 const API_URL = "https://plurione-backend-ur9j.onrender.com";
 
 export const crearCliente = async (datosCliente) => {
