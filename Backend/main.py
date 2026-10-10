@@ -95,7 +95,7 @@ def create_initial_admin():
                 
             # Adaptar rol (solo si existe en tu modelo)
             if hasattr(models.Usuario, 'rol'):
-                datos_admin['rol'] = "Socio Administrador"
+                datos_admin['rol'] = "Administrador"
                 
             admin = models.Usuario(**datos_admin)
             db.add(admin)
