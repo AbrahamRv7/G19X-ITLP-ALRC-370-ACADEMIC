@@ -39,7 +39,7 @@ function ActualizarJuicio() {
         fase_anterior: juicio.fase_procesal,
         fase_nueva: nuevaFase,
         comentarios: comentarios || "Sin comentarios adicionales.",
-        usuario_modificador_id: 1  // <--- ¡EL DATO QUE FALTABA!
+        usuario_modificador_id: 1  // ID temporal por defecto
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -77,6 +77,22 @@ function ActualizarJuicio() {
               <span style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Expediente</span>
               <p style={{ margin: '5px 0 0 0', fontSize: '1.1rem', color: '#0f172a', fontWeight: '600' }}>{juicio.expediente}</p>
             </div>
+            
+            {/* NUEVOS CAMPOS AÑADIDOS */}
+            <div>
+              <span style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Contraparte</span>
+              <p style={{ margin: '5px 0 0 0', fontSize: '1rem', color: '#0f172a', textTransform: 'capitalize' }}>
+                {juicio.contraparte || 'No registrada'}
+              </p>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Juzgado / Autoridad</span>
+              <p style={{ margin: '5px 0 0 0', fontSize: '1rem', color: '#0f172a' }}>
+                {juicio.juzgado || 'Por asignar'}
+              </p>
+            </div>
+            {/* FIN CAMPOS NUEVOS */}
             
             <div>
               <span style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Materia Legal</span>

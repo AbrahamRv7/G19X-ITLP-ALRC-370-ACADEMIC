@@ -8,6 +8,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const [contratos, setContratos] = useState([]);
   const [litigios, setLitigios] = useState([]);
+  const [clientes, setClientes] = useState([]); // <-- NUEVO: Estado para clientes
   const [cargando, setCargando] = useState(true);
 
   // --- ESTADOS DEL BUSCADOR ---
@@ -54,14 +55,17 @@ function Dashboard() {
 
     const cargarDatos = async () => {
       try {
-        const [resContratos, resLitigios] = await Promise.all([
+        // <-- NUEVO: Bajamos también los clientes -->
+        const [resContratos, resLitigios, resClientes] = await Promise.all([
           api.get('/contratos', { headers: { Authorization: `Bearer ${token}` } }),
-          api.get('/litigios', { headers: { Authorization: `Bearer ${token}` } })
+          api.get('/litigios', { headers: { Authorization: `Bearer ${token}` } }),
+          api.get('/clientes/', { headers: { Authorization: `Bearer ${token}` } }) 
         ]);
         
         const contratosActualizados = procesarVencimientos(resContratos.data);
         setContratos(contratosActualizados);
         setLitigios(resLitigios.data);
+        setClientes(resClientes.data); // Guardamos los clientes
       } catch (error) {
         if (error.response?.status === 401) cerrarSesion();
       } finally {
@@ -76,6 +80,13 @@ function Dashboard() {
     navigate('/');
   };
 
+  // <-- NUEVO: Función para buscar el nombre del cliente -->
+  const obtenerNombreCliente = (cliente_id) => {
+    if (!cliente_id) return "Sin Cliente";
+    const cliente = clientes.find(c => c.id === cliente_id);
+    return cliente ? cliente.nombre_completo : "Cliente Desconocido";
+  };
+
   // --- FUNCIÓN PARA EXPORTAR A EXCEL (CSV) ---
   const exportarCSV = (datos, tipo) => {
     if (datos.length === 0) {
@@ -85,7 +96,7 @@ function Dashboard() {
 
     const cabeceras = tipo === 'contratos'
       ? ['ID', 'Tipo de Contrato', 'Contraparte', 'Estatus', 'Fecha Vencimiento', 'Monto Operación']
-      : ['ID', 'Expediente', 'Materia', 'Fase Procesal', 'Monto Contingencia'];
+      : ['ID', 'Expediente', 'Cliente', 'Materia', 'Fase Procesal', 'Monto Contingencia'];
 
     const filas = datos.map(item => {
       if (tipo === 'contratos') {
@@ -101,6 +112,7 @@ function Dashboard() {
         return [
           item.id,
           item.expediente,
+          obtenerNombreCliente(item.cliente_id), // Añadimos el cliente al Excel
           item.materia,
           item.fase_procesal,
           item.monto_contingencia || 0
@@ -235,10 +247,12 @@ function Dashboard() {
     c.estatus.toLowerCase().includes(busquedaContratos.toLowerCase())
   );
 
+  // <-- ACTUALIZADO: Filtrado inteligente que también busca por nombre de cliente -->
   const litigiosFiltrados = litigios.filter(l => 
     l.expediente.toLowerCase().includes(busquedaLitigios.toLowerCase()) ||
     l.materia.toLowerCase().includes(busquedaLitigios.toLowerCase()) ||
-    l.fase_procesal.toLowerCase().includes(busquedaLitigios.toLowerCase())
+    l.fase_procesal.toLowerCase().includes(busquedaLitigios.toLowerCase()) ||
+    obtenerNombreCliente(l.cliente_id).toLowerCase().includes(busquedaLitigios.toLowerCase())
   );
 
   // --- MATEMÁTICAS PARA GRÁFICAS Y KPIs ---
@@ -439,7 +453,7 @@ function Dashboard() {
 
                 <input 
                   type="text" 
-                  placeholder="Buscar por expediente, materia o fase..." 
+                  placeholder="Buscar por cliente, expediente, materia..." 
                   value={busquedaLitigios}
                   onChange={(e) => setBusquedaLitigios(e.target.value)}
                   style={{ width: '100%', padding: '10px', marginTop: '15px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.9rem' }}
@@ -456,7 +470,13 @@ function Dashboard() {
                           {l.materia}
                         </span>
                       </div>
-                      <p style={{ margin: '8px 0 0 0', fontSize: '0.9rem', color: '#6c757d' }}>
+                      
+                      {/* <-- NUEVO: Pinta el nombre del cliente en la tarjeta --> */}
+                      <p style={{ margin: '8px 0 0 0', fontSize: '0.95rem', color: '#4f46e5', fontWeight: '600' }}>
+                        Cliente: {obtenerNombreCliente(l.cliente_id)}
+                      </p>
+
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#6c757d' }}>
                         Fase actual: <strong style={{ color: '#2b3445', textTransform: 'capitalize' }}>{l.fase_procesal}</strong>
                       </p>
                       <p style={{ margin: '5px 0 0 0', fontSize: '0.9rem', fontWeight: 'bold', color: '#2b3445' }}>

@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { crearCliente } from '../utils/api';
 import api from './api';
 import toast from 'react-hot-toast';
 
 function RegistrarUsuario() {
   const navigate = useNavigate();
 
+  // CORREGIDO: Cambiamos "nombre_completo" por "nombre" para que empate con FastAPI
   const [formData, setFormData] = useState({
-    nombre_completo: '',
+    nombre: '', 
     email: '',
     password: '',
     rol: 'abogado'
@@ -22,7 +22,7 @@ function RegistrarUsuario() {
 
   const manejarEnvio = async (e) => {
     e.preventDefault();
-    if (!formData.nombre_completo || !formData.email || !formData.password) {
+    if (!formData.nombre || !formData.email || !formData.password) {
       toast.error('Todos los campos son obligatorios.');
       return;
     }
@@ -81,7 +81,7 @@ function RegistrarUsuario() {
             <h4 style={{ margin: '0 0 10px 0', color: '#ccfbf1', fontSize: '0.95rem' }}>📌 Políticas de Seguridad</h4>
             <ul style={{ margin: 0, paddingLeft: '20px', color: '#a7f3d0', fontSize: '0.9rem', lineHeight: '1.7' }}>
               <li><strong>Contraseñas:</strong> Asigna una clave temporal y pide al usuario que la resguarde.</li>
-              <li><strong>Auditoría:</strong> Cada acción en el sistema (como avanzar un expediente) quedará ligada al usuario que lo realice.</li>
+              <li><strong>Auditoría:</strong> Cada acción en el sistema quedará ligada al usuario que lo realice.</li>
             </ul>
           </div>
         </div>
@@ -93,7 +93,8 @@ function RegistrarUsuario() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
               <div>
                 <label style={labelStyle}>Nombre Completo *</label>
-                <input type="text" name="nombre_completo" value={formData.nombre_completo} onChange={manejarCambio} placeholder="Ej. Roberto Gómez" style={inputStyle} required />
+                {/* CORREGIDO: value a formData.nombre y name a "nombre" */}
+                <input type="text" name="nombre" value={formData.nombre} onChange={manejarCambio} placeholder="Ej. Roberto Gómez" style={inputStyle} required />
               </div>
               <div>
                 <label style={labelStyle}>Correo Electrónico (Usuario) *</label>
@@ -111,6 +112,7 @@ function RegistrarUsuario() {
                 <select name="rol" value={formData.rol} onChange={manejarCambio} style={{ ...inputStyle, cursor: 'pointer' }}>
                   <option value="abogado">Abogado (Estándar)</option>
                   <option value="admin">Administrador</option>
+                  <option value="viewer">Solo Lectura (Viewer)</option>
                 </select>
               </div>
             </div>
