@@ -69,12 +69,35 @@ def create_initial_admin():
         if not user:
             print("La base de datos está vacía. Creando administrador inicial Pepe Pérez...")
             hashed_password = pwd_context.hash("password123")
-            admin = models.Usuario(
-                nombre="Pepe Perez",
-                correo="pepe.perez@plurione.com",
-                rol="Socio Administrador",
-                contrasena_hash=hashed_password
-            )
+            
+            # Construcción dinámica que se adapta automáticamente a tu models.py
+            datos_admin = {}
+            
+            # Adaptar correo
+            if hasattr(models.Usuario, 'email'):
+                datos_admin['email'] = "pepe.perez@plurione.com"
+            else:
+                datos_admin['correo'] = "pepe.perez@plurione.com"
+                
+            # Adaptar nombre
+            if hasattr(models.Usuario, 'nombre_completo'):
+                datos_admin['nombre_completo'] = "Pepe Perez"
+            else:
+                datos_admin['nombre'] = "Pepe Perez"
+                
+            # Adaptar contraseña
+            if hasattr(models.Usuario, 'password_hash'):
+                datos_admin['password_hash'] = hashed_password
+            elif hasattr(models.Usuario, 'hashed_password'):
+                datos_admin['hashed_password'] = hashed_password
+            else:
+                datos_admin['contrasena_hash'] = hashed_password
+                
+            # Adaptar rol (solo si existe en tu modelo)
+            if hasattr(models.Usuario, 'rol'):
+                datos_admin['rol'] = "Socio Administrador"
+                
+            admin = models.Usuario(**datos_admin)
             db.add(admin)
             db.commit()
             print("¡Pepe Perez creado con éxito!")
@@ -82,7 +105,6 @@ def create_initial_admin():
         print(f"Error al crear el administrador: {e}")
     finally:
         db.close()
-
 @app.get("/crear-admin-seguro", tags=["Emergencia"])
 def crear_admin_seguro():
     db = database.SessionLocal()
