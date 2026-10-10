@@ -74,7 +74,7 @@ def crear_admin_seguro():
         nuevo_admin = models.Usuario(
             nombre="Pepe Perez",
             correo="pepe.perez@plurione.com",
-            rol="Socio Administrador",
+            rol="Administrador",
             contrasena_hash=get_password_hash("password123")
         )
         db.add(nuevo_admin)
