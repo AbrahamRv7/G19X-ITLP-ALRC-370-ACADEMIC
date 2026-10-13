@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, text
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
@@ -41,7 +41,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 # =====================================================================
-# 2. CREACIÓN DE LA APLICACIÓN (¡AQUÍ NACE 'app'!)
+# 2. CREACIÓN DE LA APLICACIÓN
 # =====================================================================
 app = FastAPI(
     title="PluriOne - API de Métricas Jurídicas",
@@ -61,10 +61,21 @@ app.add_middleware(
 )
 
 # =====================================================================
-# 3. EVENTOS DE ARRANQUE Y FUNCIONES DE EMERGENCIA
+# 3. EVENTOS DE ARRANQUE Y AUTO-MIGRACIÓN DE TABLAS
 # =====================================================================
 @app.on_event("startup")
-def create_initial_admin():
+def startup_tasks():
+    # A) Auto-migración segura para agregar las columnas nuevas a la tabla litigios en PostgreSQL
+    try:
+        with database.engine.begin() as conn:
+            conn.execute(text("ALTER TABLE litigios ADD COLUMN IF NOT EXISTS cliente_id INTEGER REFERENCES clientes(id) ON DELETE SET NULL;"))
+            conn.execute(text("ALTER TABLE litigios ADD COLUMN IF NOT EXISTS contraparte VARCHAR(150);"))
+            conn.execute(text("ALTER TABLE litigios ADD COLUMN IF NOT EXISTS juzgado VARCHAR(150);"))
+        print("Migración de columnas en tabla 'litigios' verificada con éxito.")
+    except Exception as e:
+        print(f"Aviso en auto-migración: {e}")
+
+    # B) Creación de usuario administrador inicial si la BD está vacía
     db: Session = database.SessionLocal() 
     try:
         user = db.query(models.Usuario).first()
@@ -72,22 +83,17 @@ def create_initial_admin():
             print("La base de datos está vacía. Creando administrador inicial Pepe Pérez...")
             hashed_password = pwd_context.hash("password123")
             
-            # Construcción dinámica que se adapta automáticamente a tu models.py
             datos_admin = {}
-            
-            # Adaptar correo
             if hasattr(models.Usuario, 'email'):
                 datos_admin['email'] = "pepe.perez@plurione.com"
             else:
                 datos_admin['correo'] = "pepe.perez@plurione.com"
                 
-            # Adaptar nombre
             if hasattr(models.Usuario, 'nombre_completo'):
                 datos_admin['nombre_completo'] = "Pepe Perez"
             else:
                 datos_admin['nombre'] = "Pepe Perez"
                 
-            # Adaptar contraseña
             if hasattr(models.Usuario, 'password_hash'):
                 datos_admin['password_hash'] = hashed_password
             elif hasattr(models.Usuario, 'hashed_password'):
@@ -95,7 +101,6 @@ def create_initial_admin():
             else:
                 datos_admin['contrasena_hash'] = hashed_password
                 
-            # Adaptar rol (solo si existe en tu modelo)
             if hasattr(models.Usuario, 'rol'):
                 datos_admin['rol'] = "admin"
                 
@@ -107,11 +112,11 @@ def create_initial_admin():
         print(f"Error al crear el administrador: {e}")
     finally:
         db.close()
+
 @app.get("/crear-admin-seguro", tags=["Emergencia"])
 def crear_admin_seguro():
     db = database.SessionLocal()
     try:
-        # Buscamos de forma segura si ya existe el correo
         user = db.query(models.Usuario).filter(
             getattr(models.Usuario, 'correo', getattr(models.Usuario, 'email', None)) == "pepe.perez@plurione.com"
         ).first()
@@ -122,13 +127,13 @@ def crear_admin_seguro():
         
         nuevo_admin = models.Usuario(
             nombre="Pepe Perez",
-            correo="pepe.perez@plurione.com",
-            rol="Socio Administrador",
-            contrasena_hash=pwd_context.hash("password123")
+            email="pepe.perez@plurione.com",
+            rol="admin",
+            password_hash=pwd_context.hash("password123")
         )
         db.add(nuevo_admin)
         db.commit()
-        return {"estatus": "EXITO: Pepe Perez ha sido creado", "correo": nuevo_admin.correo}
+        return {"estatus": "EXITO: Pepe Perez ha sido creado", "correo": nuevo_admin.email}
         
     except Exception as e:
         return {"estatus": "ERROR", "detalle": str(e)}
@@ -136,7 +141,7 @@ def crear_admin_seguro():
         db.close()
 
 # =====================================================================
-# 4. MIDDLEWARES DE PROTECCIÓN (GUARDIA DE SEGURIDAD)
+# 4. MIDDLEWARES DE PROTECCIÓN
 # =====================================================================
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
     credentials_exception = HTTPException(
@@ -152,7 +157,6 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     except JWTError:
         raise credentials_exception
         
-    # Búsqueda dinámica flexible (soporta columna 'correo' o 'email')
     if hasattr(models.Usuario, 'correo'):
         usuario = db.query(models.Usuario).filter(models.Usuario.correo == email).first()
     else:
@@ -173,10 +177,8 @@ def leer_raiz(db: Session = Depends(database.get_db)):
 # ==========================================
 # RUTAS DE CLIENTES
 # ==========================================
-
 @app.post("/clientes/", response_model=ClienteResponse)
 def crear_cliente(cliente: ClienteCreate, db: Session = Depends(database.get_db)):
-    # Crear el cliente en la base de datos
     nuevo_cliente = models.Cliente(**cliente.model_dump())
     db.add(nuevo_cliente)
     try:
@@ -194,20 +196,16 @@ def obtener_clientes(skip: int = 0, limit: int = 100, db: Session = Depends(data
 # ==========================================
 # RUTAS DE EXPEDIENTES
 # ==========================================
-
 @app.post("/expedientes/", response_model=ExpedienteResponse)
 def crear_expediente(expediente: ExpedienteCreate, db: Session = Depends(database.get_db)):
-    # 1. Verificar que el cliente exista
     cliente = db.query(models.Cliente).filter(models.Cliente.id == expediente.cliente_id).first()
     if not cliente:
         raise HTTPException(status_code=404, detail="El cliente especificado no existe")
     
-    # 2. Verificar que el abogado exista
     abogado = db.query(models.Usuario).filter(models.Usuario.id == expediente.abogado_id).first()
     if not abogado:
         raise HTTPException(status_code=404, detail="El abogado especificado no existe")
 
-    # 3. Guardar el expediente
     nuevo_expediente = models.Expediente(**expediente.model_dump())
     db.add(nuevo_expediente)
     try:
@@ -227,7 +225,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     termino_busqueda = form_data.username.strip().lower()
     filtros = []
     
-    # Tolerancia a diferentes nombres de columna en tu models.py
     if hasattr(models.Usuario, 'email'):
         filtros.append(func.lower(models.Usuario.email) == termino_busqueda)
     if hasattr(models.Usuario, 'correo'):
@@ -246,13 +243,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     if not usuario:
         raise HTTPException(status_code=401, detail="Usuario o correo no encontrado")
         
-    # Tolerancia al nombre de la columna de contraseña
     hash_guardado = getattr(usuario, 'contrasena_hash', getattr(usuario, 'password_hash', getattr(usuario, 'hashed_password', None)))
         
     if not hash_guardado or not pwd_context.verify(form_data.password, hash_guardado):
         raise HTTPException(status_code=401, detail="Credenciales incorrectas. Revisa tu usuario/correo y contraseña.")
         
-    # El token se genera utilizando el correo del usuario
     correo_usuario = getattr(usuario, 'correo', getattr(usuario, 'email', 'desconocido'))
     access_token = create_access_token(data={"sub": correo_usuario})
     
@@ -277,7 +272,6 @@ def crear_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(database
     
     password_encriptada = pwd_context.hash(usuario.password)
     
-    # Construcción dinámica del nuevo usuario adaptada a tu modelo
     datos_nuevo_usuario = {}
     if hasattr(models.Usuario, 'nombre_completo'):
         datos_nuevo_usuario['nombre_completo'] = getattr(usuario, 'nombre_completo', getattr(usuario, 'nombre', None))
@@ -321,8 +315,7 @@ def crear_contrato(contrato: schemas.ContratoCreate, db: Session = Depends(datab
 
 @app.get("/contratos", tags=["1. Operaciones"])
 def obtener_contratos(db: Session = Depends(database.get_db)):
-    contratos = db.query(models.Contrato).all()
-    return contratos
+    return db.query(models.Contrato).all()
     
 @app.put("/contratos/{contrato_id}/estatus", tags=["2. Contratos"])
 def actualizar_estatus_contrato(contrato_id: int, datos: schemas.ContratoEstatusUpdate, db: Session = Depends(database.get_db)):
@@ -337,17 +330,28 @@ def actualizar_estatus_contrato(contrato_id: int, datos: schemas.ContratoEstatus
 # --- MÓDULO 4: LITIGIOS ---
 @app.post("/litigios", tags=["Litigios"])
 def crear_litigio(litigio: schemas.LitigioCreate, db: Session = Depends(database.get_db)):
-    nuevo_litigio = models.Litigio(**litigio.model_dump())
-    nuevo_litigio.materia = nuevo_litigio.materia.capitalize()
+    datos = litigio.model_dump()
+    columnas_validas = {c.name for c in models.Litigio.__table__.columns}
+    datos_filtrados = {k: v for k, v in datos.items() if k in columnas_validas}
+
+    nuevo_litigio = models.Litigio(**datos_filtrados)
+    if nuevo_litigio.materia:
+        nuevo_litigio.materia = nuevo_litigio.materia.capitalize()
+    if nuevo_litigio.probabilidad_exito:
+        nuevo_litigio.probabilidad_exito = nuevo_litigio.probabilidad_exito.capitalize()
+        
     db.add(nuevo_litigio)
-    db.commit()
-    db.refresh(nuevo_litigio)
-    return nuevo_litigio
+    try:
+        db.commit()
+        db.refresh(nuevo_litigio)
+        return nuevo_litigio
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Error al guardar el litigio: {str(e)}")
 
 @app.get("/litigios", tags=["Litigios"])
 def obtener_litigios(db: Session = Depends(database.get_db)):
-    litigios = db.query(models.Litigio).all()
-    return litigios
+    return db.query(models.Litigio).all()
     
 @app.post("/litigios/{litigio_id}/historial", tags=["3. Gestión de Litigios"])
 def registrar_avance_litigio(litigio_id: int, historial: schemas.HistorialLitigioCreate, db: Session = Depends(database.get_db)):
@@ -449,7 +453,7 @@ def metricas_carga_trabajo(db: Session = Depends(database.get_db), current_user:
     return reporte_carga
 
 # =====================================================================
-# 6. MÓDULO DE INTELIGENCIA ARTIFICIAL (SEGURO)
+# 6. MÓDULO DE INTELIGENCIA ARTIFICIAL
 # =====================================================================
 class MensajeChat(BaseModel):
     texto: str
@@ -489,7 +493,6 @@ def chat_litigio_ia(litigio_id: int, mensaje: MensajeChat, db: Session = Depends
     elif "tiempo" in pregunta or "cuánto" in pregunta or "duración" in pregunta:
         respuesta = f"⏳ Actualmente nos encontramos en la fase de '{litigio.fase_procesal}'. Dependiendo de la carga del juzgado, esta etapa puede demorar entre 3 y 6 meses antes de pasar a la siguiente instancia judicial."
     elif "resumen" in pregunta or "director" in pregunta:
-        # AQUÍ ESTABA EL ERROR: Sintaxis corregida sin guiones ni saltos erróneos
         respuesta = (
             f"📝 Resumen Ejecutivo:\n"
             f"Expediente: {litigio.expediente} ({litigio.materia}).\n"

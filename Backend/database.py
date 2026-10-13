@@ -8,7 +8,6 @@ SQLALCHEMY_DATABASE_URL = os.getenv(
     "postgresql+psycopg://plurione_db_user:losw7ovnwgKbsIDDMurfX7XcbZvkJxwo@dpg-db467pbncjis73bussrg-a.ohio-postgres.render.com/plurione_db" 
 )
 
-# Corrección automática de seguridad en caso de que Render modifique el prefijo
 if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
     SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
 elif SQLALCHEMY_DATABASE_URL.startswith("postgresql://") and not SQLALCHEMY_DATABASE_URL.startswith("postgresql+psycopg"):

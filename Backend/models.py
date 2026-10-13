@@ -3,7 +3,6 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, Fore
 from sqlalchemy.orm import relationship
 from database import Base
 from sqlalchemy.sql import func
-import enum
 
 class RolUsuario(str, enum.Enum):
     admin = 'admin'
@@ -29,6 +28,13 @@ class NivelProbabilidad(str, enum.Enum):
     media = 'Media'
     baja = 'Baja'
 
+class EstadoExpediente(str, enum.Enum):
+    abierto = "Abierto"
+    en_proceso = "En Proceso"
+    mediacion = "Mediación"
+    sentencia = "Sentencia"
+    cerrado = "Cerrado"
+
 class Usuario(Base):
     __tablename__ = "usuarios"
 
@@ -37,11 +43,11 @@ class Usuario(Base):
     email = Column(String(100), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     rol = Column(SQLEnum(RolUsuario), default=RolUsuario.viewer)
-    expedientes = relationship("Expediente", back_populates="abogado")
     esta_activo = Column(Boolean, default=True)
     creado_en = Column(DateTime, server_default=func.now())
     actualizado_en = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
+    expedientes = relationship("Expediente", back_populates="abogado")
     contratos = relationship("Contrato", back_populates="responsable")
     litigios = relationship("Litigio", back_populates="responsable")
 
@@ -56,8 +62,6 @@ class Contrato(Base):
     fecha_firma = Column(DateTime)
     fecha_vencimiento = Column(DateTime)
     monto_operacion = Column(Numeric(15, 2), default=0.00)
-    
-    # Aquí está la solución: obligamos a SQLAlchemy a usar los valores
     estatus = Column(SQLEnum(EstatusContrato, values_callable=lambda obj: [e.value for e in obj]), default=EstatusContrato.activo)
     
     creado_en = Column(DateTime, server_default=func.now())
@@ -70,11 +74,11 @@ class Litigio(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     usuario_responsable_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"))
-    
-    
-    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True) 
+    cliente_id = Column(Integer, ForeignKey("clientes.id", ondelete="SET NULL"), nullable=True) 
 
     expediente = Column(String(50), unique=True, nullable=False)
+    contraparte = Column(String(150), nullable=True) # <-- NUEVA COLUMNA
+    juzgado = Column(String(150), nullable=True)     # <-- NUEVA COLUMNA
     
     materia = Column(SQLEnum(MateriaLitigio, values_callable=lambda obj: [e.value for e in obj]), nullable=False)
     fase_procesal = Column(String(100), nullable=False)
@@ -102,15 +106,6 @@ class HistorialLitigio(Base):
 
     litigio = relationship("Litigio", back_populates="historial")
 
-    # 1. Definimos los estados posibles de un expediente
-class EstadoExpediente(str, enum.Enum):
-    abierto = "Abierto"
-    en_proceso = "En Proceso"
-    mediacion = "Mediación"
-    sentencia = "Sentencia"
-    cerrado = "Cerrado"
-
-# 2. Modelo de Clientes
 class Cliente(Base):
     __tablename__ = "clientes"
 
@@ -121,10 +116,8 @@ class Cliente(Base):
     telefono = Column(String(20))
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relación bidireccional con Expediente
     expedientes = relationship("Expediente", back_populates="cliente")
 
-# 3. Modelo de Expedientes (El núcleo del sistema)
 class Expediente(Base):
     __tablename__ = "expedientes"
 
@@ -134,15 +127,11 @@ class Expediente(Base):
     descripcion = Column(Text)
     estado = Column(SQLEnum(EstadoExpediente), default=EstadoExpediente.abierto)
     
-    # Llaves Foráneas (Foreign Keys)
     cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False)
     abogado_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False) 
 
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
     actualizado_en = Column(DateTime(timezone=True), onupdate=func.now())
 
-    # Relaciones para navegar los datos fácilmente en Python
     cliente = relationship("Cliente", back_populates="expedientes")
     abogado = relationship("Usuario", back_populates="expedientes")
-
-    
