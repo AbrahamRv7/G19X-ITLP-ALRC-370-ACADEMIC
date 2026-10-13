@@ -56,6 +56,8 @@ class Contrato(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     usuario_responsable_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"))
+    cliente_id = Column(Integer, ForeignKey("clientes.id", ondelete="SET NULL"), nullable=True) # <-- NUEVA RELACIÓN
+    
     tipo_contrato = Column(String(100), nullable=False)
     contraparte = Column(String(150), nullable=False)
     departamento_solicitante = Column(String(100), nullable=False)
@@ -68,7 +70,7 @@ class Contrato(Base):
     actualizado_en = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     responsable = relationship("Usuario", back_populates="contratos")
-
+    cliente = relationship("Cliente") 
 class Litigio(Base):
     __tablename__ = "litigios"
 

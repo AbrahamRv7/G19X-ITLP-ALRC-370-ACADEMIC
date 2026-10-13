@@ -61,6 +61,7 @@ class UsuarioResponse(BaseModel):
 # ==========================================
 
 class ContratoCreate(BaseModel):
+    cliente_id: Optional[int] = None
     tipo_contrato: str = Field(
         ..., 
         title="Tipo de Contrato", 
@@ -103,6 +104,7 @@ class ContratoCreate(BaseModel):
     )
 
 class ContratoResponse(ContratoCreate):
+    cliente_id: Optional[int] = None
     id: int
     creado_en: datetime
     model_config = {"from_attributes": True}

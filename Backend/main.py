@@ -71,6 +71,7 @@ def startup_tasks():
             conn.execute(text("ALTER TABLE litigios ADD COLUMN IF NOT EXISTS cliente_id INTEGER REFERENCES clientes(id) ON DELETE SET NULL;"))
             conn.execute(text("ALTER TABLE litigios ADD COLUMN IF NOT EXISTS contraparte VARCHAR(150);"))
             conn.execute(text("ALTER TABLE litigios ADD COLUMN IF NOT EXISTS juzgado VARCHAR(150);"))
+            conn.execute(text("ALTER TABLE contratos ADD COLUMN IF NOT EXISTS cliente_id INTEGER REFERENCES clientes(id) ON DELETE SET NULL;"))
         print("Migración de columnas en tabla 'litigios' verificada con éxito.")
     except Exception as e:
         print(f"Aviso en auto-migración: {e}")
@@ -307,25 +308,19 @@ def obtener_usuarios(db: Session = Depends(database.get_db), current_user: model
 # --- MÓDULO 3: CONTRATOS ---
 @app.post("/contratos", tags=["1. Operaciones"])
 def crear_contrato(contrato: schemas.ContratoCreate, db: Session = Depends(database.get_db)):
-    nuevo_contrato = models.Contrato(**contrato.model_dump())
-    db.add(nuevo_contrato)
-    db.commit()
-    db.refresh(nuevo_contrato)
-    return nuevo_contrato
+    datos = contrato.model_dump()
+    columnas_validas = {c.name for c in models.Contrato.__table__.columns}
+    datos_filtrados = {k: v for k, v in datos.items() if k in columnas_validas}
 
-@app.get("/contratos", tags=["1. Operaciones"])
-def obtener_contratos(db: Session = Depends(database.get_db)):
-    return db.query(models.Contrato).all()
-    
-@app.put("/contratos/{contrato_id}/estatus", tags=["2. Contratos"])
-def actualizar_estatus_contrato(contrato_id: int, datos: schemas.ContratoEstatusUpdate, db: Session = Depends(database.get_db)):
-    contrato = db.query(models.Contrato).filter(models.Contrato.id == contrato_id).first()
-    if not contrato:
-        raise HTTPException(status_code=404, detail="Contrato no encontrado")
-    contrato.estatus = datos.estatus
-    db.commit()
-    db.refresh(contrato)
-    return contrato
+    nuevo_contrato = models.Contrato(**datos_filtrados)
+    db.add(nuevo_contrato)
+    try:
+        db.commit()
+        db.refresh(nuevo_contrato)
+        return nuevo_contrato
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Error al crear el contrato: {str(e)}")
 
 # --- MÓDULO 4: LITIGIOS ---
 @app.post("/litigios", tags=["Litigios"])
