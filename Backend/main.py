@@ -306,6 +306,7 @@ def obtener_usuarios(db: Session = Depends(database.get_db), current_user: model
     return db.query(models.Usuario).all()
 
 # --- MÓDULO 3: CONTRATOS ---
+# --- MÓDULO 3: CONTRATOS ---
 @app.post("/contratos", tags=["1. Operaciones"])
 def crear_contrato(contrato: schemas.ContratoCreate, db: Session = Depends(database.get_db)):
     datos = contrato.model_dump()
@@ -322,6 +323,19 @@ def crear_contrato(contrato: schemas.ContratoCreate, db: Session = Depends(datab
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Error al crear el contrato: {str(e)}")
 
+@app.get("/contratos", tags=["1. Operaciones"])
+def obtener_contratos(db: Session = Depends(database.get_db)):
+    return db.query(models.Contrato).all()
+    
+@app.put("/contratos/{contrato_id}/estatus", tags=["2. Contratos"])
+def actualizar_estatus_contrato(contrato_id: int, datos: schemas.ContratoEstatusUpdate, db: Session = Depends(database.get_db)):
+    contrato = db.query(models.Contrato).filter(models.Contrato.id == contrato_id).first()
+    if not contrato:
+        raise HTTPException(status_code=404, detail="Contrato no encontrado")
+    contrato.estatus = datos.estatus
+    db.commit()
+    db.refresh(contrato)
+    return contrato
 # --- MÓDULO 4: LITIGIOS ---
 @app.post("/litigios", tags=["Litigios"])
 def crear_litigio(litigio: schemas.LitigioCreate, db: Session = Depends(database.get_db)):
