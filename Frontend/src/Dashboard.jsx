@@ -8,16 +8,20 @@ function Dashboard() {
   const navigate = useNavigate();
   const [contratos, setContratos] = useState([]);
   const [litigios, setLitigios] = useState([]);
-  const [clientes, setClientes] = useState([]); // <-- NUEVO: Estado para clientes
+  const [clientes, setClientes] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   // --- ESTADOS DEL BUSCADOR ---
   const [busquedaContratos, setBusquedaContratos] = useState('');
   const [busquedaLitigios, setBusquedaLitigios] = useState('');
 
-  // --- ESTADOS PARA MODAL DE CONFIRMACIÓN ---
+  // --- ESTADOS PARA MODAL DE CAMBIO DE ESTATUS ---
   const [modalConfirmacionVisible, setModalConfirmacionVisible] = useState(false);
   const [contratoPendienteDeCambio, setContratoPendienteDeCambio] = useState(null);
+
+  // --- ESTADOS PARA MODAL DE ELIMINACIÓN ---
+  const [modalEliminarVisible, setModalEliminarVisible] = useState(false);
+  const [itemAEliminar, setItemAEliminar] = useState(null); // { id, tipo: 'contrato' | 'litigio', nombre }
 
   // --- ESTADOS DEL CHAT IA ---
   const [chatVisible, setChatVisible] = useState(false);
@@ -37,7 +41,8 @@ function Dashboard() {
 
     return listaContratos.map(contrato => {
       if (contrato.fecha_vencimiento && contrato.estatus !== 'Terminado') {
-        const fechaVencimiento = new Date(`${contrato.fecha_vencimiento}T00:00:00`);
+        const fechaLimpia = contrato.fecha_vencimiento.split('T')[0];
+        const fechaVencimiento = new Date(`${fechaLimpia}T00:00:00`);
         if (fechaVencimiento < hoy) {
           return { ...contrato, estatus: 'Vencido' };
         }
@@ -54,24 +59,38 @@ function Dashboard() {
     }
 
     const cargarDatos = async () => {
-      try {
-        // <-- NUEVO: Bajamos también los clientes -->
-        const [resContratos, resLitigios, resClientes] = await Promise.all([
-          api.get('/contratos', { headers: { Authorization: `Bearer ${token}` } }),
-          api.get('/litigios', { headers: { Authorization: `Bearer ${token}` } }),
-          api.get('/clientes/', { headers: { Authorization: `Bearer ${token}` } }) 
-        ]);
-        
-        const contratosActualizados = procesarVencimientos(resContratos.data);
-        setContratos(contratosActualizados);
-        setLitigios(resLitigios.data);
-        setClientes(resClientes.data); // Guardamos los clientes
-      } catch (error) {
-        if (error.response?.status === 401) cerrarSesion();
-      } finally {
-        setCargando(false);
+      const headers = { Authorization: `Bearer ${token}` };
+
+      const [resContratos, resLitigios, resClientes] = await Promise.allSettled([
+        api.get('/contratos', { headers }),
+        api.get('/litigios', { headers }),
+        api.get('/clientes/', { headers })
+      ]);
+
+      if (resContratos.status === 'fulfilled') {
+        setContratos(procesarVencimientos(resContratos.value.data));
+      } else {
+        console.error('Error en /contratos:', resContratos.reason);
+        if (resContratos.reason?.response?.status === 401) return cerrarSesion();
+        toast.error('Error al cargar contratos desde el servidor.');
       }
+
+      if (resLitigios.status === 'fulfilled') {
+        setLitigios(resLitigios.value.data);
+      } else {
+        console.error('Error en /litigios:', resLitigios.reason);
+        toast.error('Error al cargar litigios desde el servidor.');
+      }
+
+      if (resClientes.status === 'fulfilled') {
+        setClientes(resClientes.value.data);
+      } else {
+        console.error('Error en /clientes:', resClientes.reason);
+      }
+
+      setCargando(false);
     };
+
     cargarDatos();
   }, [navigate]);
 
@@ -80,11 +99,40 @@ function Dashboard() {
     navigate('/');
   };
 
-  // <-- NUEVO: Función para buscar el nombre del cliente -->
   const obtenerNombreCliente = (cliente_id) => {
     if (!cliente_id) return "Sin Cliente";
     const cliente = clientes.find(c => c.id === cliente_id);
     return cliente ? cliente.nombre_completo : "Cliente Desconocido";
+  };
+
+  // --- FUNCIONES PARA ELIMINAR REGISTROS ---
+  const solicitarEliminacion = (id, tipo, nombre) => {
+    setItemAEliminar({ id, tipo, nombre });
+    setModalEliminarVisible(true);
+  };
+
+  const confirmarEliminacion = async () => {
+    if (!itemAEliminar) return;
+    const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
+
+    try {
+      if (itemAEliminar.tipo === 'contrato') {
+        await api.delete(`/contratos/${itemAEliminar.id}`, { headers });
+        setContratos(contratos.filter(c => c.id !== itemAEliminar.id));
+        toast.success('Contrato eliminado correctamente');
+      } else {
+        await api.delete(`/litigios/${itemAEliminar.id}`, { headers });
+        setLitigios(litigios.filter(l => l.id !== itemAEliminar.id));
+        toast.success('Juicio eliminado correctamente');
+      }
+    } catch (error) {
+      toast.error('No se pudo eliminar el registro.');
+      console.error(error);
+    } finally {
+      setModalEliminarVisible(false);
+      setItemAEliminar(null);
+    }
   };
 
   // --- FUNCIÓN PARA EXPORTAR A EXCEL (CSV) ---
@@ -95,7 +143,7 @@ function Dashboard() {
     }
 
     const cabeceras = tipo === 'contratos'
-      ? ['ID', 'Tipo de Contrato', 'Contraparte', 'Estatus', 'Fecha Vencimiento', 'Monto Operación']
+      ? ['ID', 'Tipo de Contrato', 'Cliente', 'Contraparte', 'Estatus', 'Fecha Vencimiento', 'Monto Operación']
       : ['ID', 'Expediente', 'Cliente', 'Materia', 'Fase Procesal', 'Monto Contingencia'];
 
     const filas = datos.map(item => {
@@ -103,6 +151,7 @@ function Dashboard() {
         return [
           item.id,
           item.tipo_contrato,
+          obtenerNombreCliente(item.cliente_id),
           item.contraparte,
           item.estatus,
           item.fecha_vencimiento || 'N/A',
@@ -112,7 +161,7 @@ function Dashboard() {
         return [
           item.id,
           item.expediente,
-          obtenerNombreCliente(item.cliente_id), // Añadimos el cliente al Excel
+          obtenerNombreCliente(item.cliente_id),
           item.materia,
           item.fase_procesal,
           item.monto_contingencia || 0
@@ -242,16 +291,16 @@ function Dashboard() {
 
   // --- LÓGICA DE FILTRADO EN TIEMPO REAL ---
   const contratosFiltrados = contratos.filter(c => 
-    c.contraparte.toLowerCase().includes(busquedaContratos.toLowerCase()) ||
-    c.tipo_contrato.toLowerCase().includes(busquedaContratos.toLowerCase()) ||
-    c.estatus.toLowerCase().includes(busquedaContratos.toLowerCase())
+    (c.contraparte || '').toLowerCase().includes(busquedaContratos.toLowerCase()) ||
+    (c.tipo_contrato || '').toLowerCase().includes(busquedaContratos.toLowerCase()) ||
+    (c.estatus || '').toLowerCase().includes(busquedaContratos.toLowerCase()) ||
+    obtenerNombreCliente(c.cliente_id).toLowerCase().includes(busquedaContratos.toLowerCase())
   );
 
-  // <-- ACTUALIZADO: Filtrado inteligente que también busca por nombre de cliente -->
   const litigiosFiltrados = litigios.filter(l => 
-    l.expediente.toLowerCase().includes(busquedaLitigios.toLowerCase()) ||
-    l.materia.toLowerCase().includes(busquedaLitigios.toLowerCase()) ||
-    l.fase_procesal.toLowerCase().includes(busquedaLitigios.toLowerCase()) ||
+    (l.expediente || '').toLowerCase().includes(busquedaLitigios.toLowerCase()) ||
+    (l.materia || '').toLowerCase().includes(busquedaLitigios.toLowerCase()) ||
+    (l.fase_procesal || '').toLowerCase().includes(busquedaLitigios.toLowerCase()) ||
     obtenerNombreCliente(l.cliente_id).toLowerCase().includes(busquedaLitigios.toLowerCase())
   );
 
@@ -282,10 +331,9 @@ function Dashboard() {
     kpiTitle: { margin: 0, color: '#6c757d', fontSize: '0.95rem', fontWeight: '600', textTransform: 'uppercase' },
     kpiNumber: { margin: '8px 0 0 0', fontSize: '2.8rem', color: '#2b3445', fontWeight: 'bold' },
     itemCard: { backgroundColor: '#fff', border: '1px solid #edf2f9', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', transition: 'transform 0.2s, box-shadow 0.2s' },
-    btnYellow: { padding: '8px 16px', backgroundColor: '#ffc107', color: '#212529', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' },
-    btnPurple: { padding: '8px 16px', backgroundColor: '#6f42c1', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' },
-    
-    // Estilos del Chat Copilot
+    btnYellow: { padding: '8px 14px', backgroundColor: '#ffc107', color: '#212529', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' },
+    btnPurple: { padding: '8px 14px', backgroundColor: '#6f42c1', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' },
+    btnDangerOutline: { padding: '6px 10px', backgroundColor: '#fff1f2', color: '#e11d48', border: '1px solid #fecdd3', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.82rem' },
     chatOverlay: { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.3)', display: 'flex', justifyContent: 'flex-end', zIndex: 9999 },
     chatWindow: { width: '450px', maxWidth: '100%', height: '100%', backgroundColor: '#f4f7f6', display: 'flex', flexDirection: 'column', boxShadow: '-5px 0 20px rgba(0,0,0,0.15)' },
     chatHeader: { padding: '20px', backgroundColor: '#2b3445', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
@@ -296,10 +344,8 @@ function Dashboard() {
     chatFooter: { padding: '15px', backgroundColor: '#fff', borderTop: '1px solid #ddd' },
     chatInput: { flex: 1, padding: '12px 15px', borderRadius: '25px', border: '1px solid #ccc', outline: 'none', fontSize: '0.95rem' },
     chatBtn: { padding: '10px 20px', backgroundColor: '#0d6efd', color: '#fff', border: 'none', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold' },
-    
-    // Estilos del Modal
     modalOverlay: { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10000 },
-    modalBox: { backgroundColor: '#fff', padding: '30px', borderRadius: '12px', width: '400px', maxWidth: '90%', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', textAlign: 'center' }
+    modalBox: { backgroundColor: '#fff', padding: '30px', borderRadius: '12px', width: '420px', maxWidth: '90%', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', textAlign: 'center' }
   };
 
   return (
@@ -382,10 +428,10 @@ function Dashboard() {
                 
                 <input 
                   type="text" 
-                  placeholder="Buscar por contraparte, tipo o estatus..." 
+                  placeholder="Buscar por cliente, contraparte, tipo o estatus..." 
                   value={busquedaContratos}
                   onChange={(e) => setBusquedaContratos(e.target.value)}
-                  style={{ width: '100%', padding: '10px', marginTop: '15px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.9rem' }}
+                  style={{ width: '100%', padding: '10px', marginTop: '15px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }}
                 />
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px' }}>
@@ -421,22 +467,33 @@ function Dashboard() {
                           <option value="Terminado">Terminado</option>
                         </select>
                       </div>
+
+                      <p style={{ margin: '8px 0 0 0', fontSize: '0.95rem', color: '#2563eb', fontWeight: '600' }}>
+                        Cliente: {obtenerNombreCliente(c.cliente_id)}
+                      </p>
                       
-                      <p style={{ margin: '8px 0 0 0', fontSize: '0.9rem', color: '#6c757d' }}>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#6c757d' }}>
                         Contraparte: <strong style={{ color: '#2b3445', textTransform: 'capitalize' }}>{c.contraparte}</strong>
                       </p>
                       
                       {c.fecha_vencimiento && (
                          <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: c.estatus === 'Vencido' ? '#dc3545' : '#6c757d' }}>
-                           Vence el: {c.fecha_vencimiento}
+                           Vence el: {c.fecha_vencimiento.split('T')[0]}
                          </p>
                       )}
 
-                      {c.monto_operacion && (
-                        <p style={{ margin: '5px 0 0 0', fontSize: '0.9rem', fontWeight: 'bold', color: '#198754' }}>
-                          Monto: {formatearDinero(c.monto_operacion)}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                        <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 'bold', color: '#198754' }}>
+                          Monto: {formatearDinero(c.monto_operacion || 0)}
                         </p>
-                      )}
+
+                        <button
+                          onClick={() => solicitarEliminacion(c.id, 'contrato', `${c.tipo_contrato} (${c.contraparte})`)}
+                          style={styles.btnDangerOutline}
+                        >
+                          🗑️ Eliminar
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -456,7 +513,7 @@ function Dashboard() {
                   placeholder="Buscar por cliente, expediente, materia..." 
                   value={busquedaLitigios}
                   onChange={(e) => setBusquedaLitigios(e.target.value)}
-                  style={{ width: '100%', padding: '10px', marginTop: '15px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.9rem' }}
+                  style={{ width: '100%', padding: '10px', marginTop: '15px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }}
                 />
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px' }}>
@@ -471,7 +528,6 @@ function Dashboard() {
                         </span>
                       </div>
                       
-                      {/* <-- NUEVO: Pinta el nombre del cliente en la tarjeta --> */}
                       <p style={{ margin: '8px 0 0 0', fontSize: '0.95rem', color: '#4f46e5', fontWeight: '600' }}>
                         Cliente: {obtenerNombreCliente(l.cliente_id)}
                       </p>
@@ -485,18 +541,27 @@ function Dashboard() {
                         </span>
                       </p>
                       
-                      <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                        <button 
-                          onClick={() => navigate(`/detalle-juicio/${l.id}`, { state: { juicio: l } })} 
-                          style={{ padding: '8px 12px', backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', transition: 'background 0.2s' }}
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button 
+                            onClick={() => navigate(`/detalle-juicio/${l.id}`, { state: { juicio: l } })} 
+                            style={{ padding: '8px 12px', backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+                          >
+                            👁️ Detalles
+                          </button>
+                          <button onClick={() => navigate(`/actualizar-juicio/${l.id}`, { state: { juicio: l } })} style={styles.btnYellow}>
+                            Actualizar
+                          </button>
+                          <button onClick={() => analizarConIA(l)} style={styles.btnPurple}>
+                            ✨ IA
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => solicitarEliminacion(l.id, 'litigio', `Expediente ${l.expediente}`)}
+                          style={styles.btnDangerOutline}
                         >
-                          👁️ Detalles
-                        </button>
-                        <button onClick={() => navigate(`/actualizar-juicio/${l.id}`, { state: { juicio: l } })} style={styles.btnYellow}>
-                          Actualizar
-                        </button>
-                        <button onClick={() => analizarConIA(l)} style={styles.btnPurple}>
-                          ✨ IA
+                          🗑️ Eliminar
                         </button>
                       </div>
                     </div>
@@ -509,9 +574,7 @@ function Dashboard() {
         )}
       </div>
 
-      {/* ==================================================== */}
-      {/* COMPONENTE: MODAL DE CONFIRMACIÓN DE ESTATUS         */}
-      {/* ==================================================== */}
+      {/* MODAL DE CONFIRMACIÓN DE ESTATUS */}
       {modalConfirmacionVisible && contratoPendienteDeCambio && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalBox}>
@@ -539,9 +602,35 @@ function Dashboard() {
         </div>
       )}
 
-      {/* ==================================================== */}
-      {/* COMPONENTE: PANEL LATERAL DE CHAT IA */}
-      {/* ==================================================== */}
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+      {modalEliminarVisible && itemAEliminar && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalBox}>
+            <div style={{ fontSize: '3rem', marginBottom: '15px' }}>🗑️</div>
+            <h3 style={{ margin: '0 0 10px 0', color: '#0f172a', fontSize: '1.4rem' }}>¿Eliminar registro?</h3>
+            <p style={{ color: '#64748b', marginBottom: '25px', lineHeight: '1.5' }}>
+              Estás por eliminar permanentemente <strong>{itemAEliminar.nombre}</strong> de la base de datos. Esta acción no se puede deshacer.
+            </p>
+            
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+              <button 
+                onClick={() => { setModalEliminarVisible(false); setItemAEliminar(null); }}
+                style={{ padding: '10px 20px', backgroundColor: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={confirmarEliminacion}
+                style={{ padding: '10px 20px', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                Sí, eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PANEL LATERAL DE CHAT IA */}
       {chatVisible && (
         <div style={styles.chatOverlay} onClick={() => setChatVisible(false)}>
           <div style={styles.chatWindow} onClick={(e) => e.stopPropagation()}>

@@ -515,3 +515,42 @@ def chat_litigio_ia(litigio_id: int, mensaje: MensajeChat, db: Session = Depends
         respuesta = f"⚖️ Analizando tu pregunta sobre el expediente {litigio.expediente}... Te sugiero vigilar estrictamente los plazos de la fase actual ('{litigio.fase_procesal}') para evitar preclusiones. ¿Te gustaría explorar opciones de acuerdo o revisar el riesgo financiero?"
         
     return {"respuesta": respuesta}
+
+# =====================================================================
+# 7. ENDPOINTS DE ELIMINACIÓN (CRUD COMPLETO)
+# =====================================================================
+@app.delete("/contratos/{contrato_id}", tags=["1. Operaciones"])
+def eliminar_contrato(contrato_id: int, db: Session = Depends(database.get_db)):
+    contrato = db.query(models.Contrato).filter(models.Contrato.id == contrato_id).first()
+    if not contrato:
+        raise HTTPException(status_code=404, detail="Contrato no encontrado")
+    db.delete(contrato)
+    db.commit()
+    return {"mensaje": "Contrato eliminado correctamente"}
+
+@app.delete("/litigios/{litigio_id}", tags=["Litigios"])
+def eliminar_litigio(litigio_id: int, db: Session = Depends(database.get_db)):
+    litigio = db.query(models.Litigio).filter(models.Litigio.id == litigio_id).first()
+    if not litigio:
+        raise HTTPException(status_code=404, detail="Litigio no encontrado")
+    
+    # Eliminamos primero el historial asociado para evitar bloqueos de llave foránea
+    db.query(models.HistorialLitigio).filter(models.HistorialLitigio.litigio_id == litigio_id).delete()
+    db.delete(litigio)
+    db.commit()
+    return {"mensaje": "Litigio y su bitácora eliminados correctamente"}
+
+@app.delete("/clientes/{cliente_id}", tags=["Clientes"])
+def eliminar_cliente(cliente_id: int, db: Session = Depends(database.get_db)):
+    cliente = db.query(models.Cliente).filter(models.Cliente.id == cliente_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    
+    # Desvinculamos contratos y litigios para conservar el historial operativo
+    db.query(models.Contrato).filter(models.Contrato.cliente_id == cliente_id).update({"cliente_id": None})
+    db.query(models.Litigio).filter(models.Litigio.cliente_id == cliente_id).update({"cliente_id": None})
+    db.query(models.Expediente).filter(models.Expediente.cliente_id == cliente_id).delete()
+    
+    db.delete(cliente)
+    db.commit()
+    return {"mensaje": "Cliente eliminado correctamente"}
