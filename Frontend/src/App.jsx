@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-do
 import { Toaster } from 'react-hot-toast';
 import Login from './Login';
 import Dashboard from './Dashboard';
-import Clientes from './Clientes'; // <-- NUEVA VISTA DE DIRECTORIO
+import Clientes from './Clientes'; 
 import NuevoContrato from './NuevoContrato';
 import NuevoLitigio from './NuevoLitigio';
 import NuevoCliente from './NuevoCliente';
