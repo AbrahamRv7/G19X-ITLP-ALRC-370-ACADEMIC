@@ -2,9 +2,10 @@ import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-do
 import { Toaster } from 'react-hot-toast';
 import Login from './Login';
 import Dashboard from './Dashboard';
+import Clientes from './Clientes'; // <-- NUEVA VISTA DE DIRECTORIO
 import NuevoContrato from './NuevoContrato';
 import NuevoLitigio from './NuevoLitigio';
-import NuevoCliente from './NuevoCliente'; // <-- 1. IMPORTACIÓN AGREGADA
+import NuevoCliente from './NuevoCliente';
 import ActualizarJuicio from './ActualizarJuicio';
 import DetalleJuicio from './DetalleJuicio';
 import RegistrarUsuario from './RegistrarUsuario';
@@ -18,7 +19,7 @@ function Layout({ children }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
-      {/* 2. ETIQUETA TOASTER */}
+      {/* ETIQUETA TOASTER */}
       <Toaster 
         position="top-right" 
         toastOptions={{
@@ -31,7 +32,7 @@ function Layout({ children }) {
 
       {/* BARRA DE NAVEGACIÓN PREMIUM */}
       <nav style={{
-        backgroundColor: '#0f172a', // Azul medianoche corporativo
+        backgroundColor: '#0f172a',
         height: '70px',
         display: 'flex',
         justifyContent: 'space-between',
@@ -56,12 +57,19 @@ function Layout({ children }) {
         {/* MENÚ Y BOTONES DE ACCIÓN */}
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <Link to="/dashboard" style={{ 
-            color: '#94a3b8', textDecoration: 'none', fontWeight: '600', marginRight: '20px', fontSize: '0.95rem' 
+            color: location.pathname === '/dashboard' ? '#ffffff' : '#94a3b8', 
+            textDecoration: 'none', fontWeight: '600', marginRight: '10px', fontSize: '0.95rem' 
           }}>
             Dashboard
           </Link>
+
+          <Link to="/clientes" style={{ 
+            color: location.pathname === '/clientes' ? '#10b981' : '#94a3b8', 
+            textDecoration: 'none', fontWeight: '600', marginRight: '15px', fontSize: '0.95rem' 
+          }}>
+            📇 Clientes
+          </Link>
           
-          {/* <-- 2. BOTÓN DE NUEVO CLIENTE AGREGADO --> */}
           <Link to="/nuevo-cliente" style={{
             backgroundColor: '#10b981', color: '#ffffff', padding: '8px 18px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600', boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
           }}>
@@ -98,10 +106,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          
-          {/* <-- 3. RUTA DE NUEVO CLIENTE AGREGADA --> */}
+          <Route path="/clientes" element={<Clientes />} />
           <Route path="/nuevo-cliente" element={<NuevoCliente />} />
-          
           <Route path="/nuevo-contrato" element={<NuevoContrato />} />
           <Route path="/nuevo-litigio" element={<NuevoLitigio />} />
           <Route path="/actualizar-juicio/:id" element={<ActualizarJuicio />} />
