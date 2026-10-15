@@ -1,38 +1,96 @@
-# ⚖️ PluriOne: LegalOps Analytics & AI Copilot
+# ⚖️ PluriOne LegalOps
 
-PluriOne es una plataforma SaaS diseñada para modernizar y centralizar la operación de departamentos jurídicos corporativos. Este sistema permite la gestión del ciclo de vida de contratos, el control transaccional de litigios, la auditoría inmutable de expedientes y la generación de métricas directivas (KPIs) en tiempo real, potenciado por un asistente de Inteligencia Artificial.
+**PluriOne LegalOps** es una plataforma Full-Stack de nivel empresarial diseñada para la gestión integral de operaciones legales, seguimiento de contratos, control de litigios y análisis de contingencias financieras. 
 
-## ✨ Características Principales
+Este proyecto fue desarrollado como parte del programa de **Residencia Profesional** para la carrera de Ingeniería en Sistemas Computacionales.
 
-* **Dashboard Analítico en Tiempo Real:** Visualización de métricas financieras y riesgo económico usando Recharts.
-* **Smart Contracts Management:** Seguimiento de estatus de contratos con cálculo de caducidad automática.
-* **Control Transaccional de Litigios:** Registro de expedientes con bitácora de auditoría inmutable (trazabilidad de cambios procesales).
-* **Copilot Legal (IA):** Asistente estratégico integrado mediante Azure OpenAI para resumir expedientes y sugerir recomendaciones.
-* **Data Export:** Motor de exportación de tablas a formato CSV/Excel con codificación UTF-8 para reportes gerenciales.
-* **Búsqueda Avanzada:** Filtrado reactivo en memoria para contrapartes, materias, estatus y expedientes.
-* **Gobernanza y Seguridad:** Autenticación de usuarios mediante tokens JWT, contraseñas encriptadas con bcrypt y control de roles.
+---
 
-## 🛠️ Stack Tecnológico (Arquitectura Cliente-Servidor)
+## 🔗 Enlaces del Proyecto en Producción
 
-**Frontend (Capa de Presentación)**
-* [React 18](https://reactjs.org/) + [Vite](https://vitejs.dev/) - Framework UI y empaquetador.
-* React Router DOM - Navegación SPA protegida.
-* Recharts - Librería de visualización de datos.
-* Axios - Cliente HTTP.
-* Tailwind CSS / Estilos Modulares nativos.
+- **Frontend (Aplicación Web):** [https://g19-x-itlp-alrc-370-academic.vercel.app](https://g19-x-itlp-alrc-370-academic.vercel.app)
+- **Backend (API REST):** [https://plurione-backend-ur9j.onrender.com](https://plurione-backend-ur9j.onrender.com)
+- **Documentación Interactiva (Swagger UI):** [https://plurione-backend-ur9j.onrender.com/docs](https://plurione-backend-ur9j.onrender.com/docs)
 
-**Backend (Capa de Lógica)**
-* [FastAPI](https://fastapi.tiangolo.com/) - Framework asíncrono de alto rendimiento.
-* Pydantic - Validación estricta de datos.
-* Passlib & python-jose - Criptografía y JWT.
-* Azure OpenAI API - Motor de Inteligencia Artificial.
+---
 
-**Base de Datos (Capa de Persistencia)**
-* [PostgreSQL](https://www.postgresql.org/) - Motor relacional (Desplegado vía Docker).
-* SQLAlchemy - ORM (Object-Relational Mapping).
+## 🚀 Arquitectura del Sistema
 
-## 🚀 Despliegue Local
+El sistema opera bajo una arquitectura en la nube escalable y separada en tres capas:
 
-1. Clona este repositorio:
-   ```bash
-   git clone [https://github.com/tu-usuario/plurione-legalops.git](https://github.com/tu-usuario/plurione-legalops.git)
+- **Frontend (Cliente):** Aplicación de una sola página (SPA) desarrollada con React y Vite, desplegada en **Vercel**. Proporciona una interfaz fluida, analítica visual con Recharts y diseño responsivo.
+- **Backend (API Rest):** Motor transaccional construido con Python y FastAPI, desplegado en **Render**. Gestiona la lógica de negocio, autenticación segura y endpoints automáticos.
+- **Base de Datos:** Base de datos relacional alojada en **PostgreSQL** (vía Render), con esquemas administrados mediante SQLAlchemy y auto-migraciones.
+
+---
+
+## ⚙️ Tecnologías Utilizadas
+
+### Frontend
+- **React 18** + **Vite**
+- **React Router DOM** (Navegación protegida)
+- **Recharts** (Dashboards y gráficas analíticas)
+- **React Hot Toast** (Notificaciones de sistema)
+
+### Backend
+- **Python 3.10+** + **FastAPI**
+- **SQLAlchemy** (ORM) + **Pydantic** (Validación de esquemas)
+- **Passlib & Bcrypt** (Hashing de contraseñas)
+- **PyJWT** (Autenticación basada en Tokens JSON Web)
+- **Psycopg2** (Driver de PostgreSQL)
+
+---
+
+## 🧩 Módulos Principales
+
+1. **Directorio Corporativo (CRM Legal):** 
+   * Padrón de clientes con cálculo dinámico en tiempo real de su exposición financiera (riesgo en litigios y montos en contratos).
+   * Búsqueda inteligente y exportación completa a formato CSV.
+   * **Ficha 360°:** Vista centralizada del expediente de un cliente con todo su historial asociado.
+2. **Gestión de Contratos:** 
+   * Registro de instrumentos legales con alertas de caducidad automática basadas en la fecha de vencimiento.
+   * Control de estatus (Borrador, En Revisión, Activo, Vencido, Terminado) y vinculación directa a clientes.
+3. **Control de Litigios (Juicios):** 
+   * Seguimiento de expedientes judiciales con registro de riesgo económico (contingencia) y materia (Laboral, Mercantil, Civil, etc.).
+   * **Motor de Historial:** Bitácora procesal y línea de tiempo interactiva que registra cada avance o cambio de fase del juicio.
+4. **Panel de Indicadores (Dashboard):** 
+   * KPIs financieros calculando el riesgo económico global de la empresa.
+   * Gráficas de distribución de carga legal (Juicios por Materia y Estatus de Contratos).
+5. **Seguridad y Control de Acceso:** 
+   * Rutas protegidas. 
+   * Autenticación vía JWT y endpoints de registro para administradores y abogados.
+
+---
+
+## 🔐 Instalación y Despliegue Local
+
+Para ejecutar el proyecto en un entorno de desarrollo local:
+
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/AbrahamRv7/G19X-ITLP-ALRC-370-ACADEMIC.git
+cd G19X-ITLP-ALRC-370-ACADEMIC
+```
+
+### 2. Configurar el Backend
+```bash
+cd Backend
+python -m venv .venv
+source .venv/Scripts/activate  # En Windows
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+### 3. Configurar el Frontend
+En una nueva terminal:
+```bash
+cd Frontend
+npm install
+npm run dev
+```
+
+---
+
+## 👨‍💻 Autor
+**Abraham Rivera**  
+Estudiante de 8vo Semestre | Ingeniería en Sistemas Computacionales | Instituto Tecnológico de La Piedad
