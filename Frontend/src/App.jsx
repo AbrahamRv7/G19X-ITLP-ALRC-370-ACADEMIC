@@ -9,6 +9,7 @@ import NuevoCliente from './NuevoCliente';
 import ActualizarJuicio from './ActualizarJuicio';
 import DetalleJuicio from './DetalleJuicio';
 import RegistrarUsuario from './RegistrarUsuario';
+import DetalleCliente from './DetalleCliente';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -113,6 +114,7 @@ function App() {
           <Route path="/actualizar-juicio/:id" element={<ActualizarJuicio />} />
           <Route path="/detalle-juicio/:id" element={<DetalleJuicio />} />
           <Route path="/registrar-usuario" element={<RegistrarUsuario />} />
+          <Route path="/detalle-cliente/:id" element={<DetalleCliente />} />
         </Routes>
       </Layout>
     </BrowserRouter>
