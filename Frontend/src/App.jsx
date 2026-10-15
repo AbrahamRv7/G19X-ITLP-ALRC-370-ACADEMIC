@@ -8,19 +8,17 @@ import NuevoLitigio from './NuevoLitigio';
 import NuevoCliente from './NuevoCliente';
 import ActualizarJuicio from './ActualizarJuicio';
 import DetalleJuicio from './DetalleJuicio';
+import DetalleCliente from './DetalleCliente'; 
 import RegistrarUsuario from './RegistrarUsuario';
-import DetalleCliente from './DetalleCliente';
 
 function Layout({ children }) {
   const location = useLocation();
   
-  // No mostramos la barra en la pantalla de Login
   if (location.pathname === '/') return children;
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
-      {/* ETIQUETA TOASTER */}
       <Toaster 
         position="top-right" 
         toastOptions={{
@@ -31,7 +29,6 @@ function Layout({ children }) {
         }} 
       />
 
-      {/* BARRA DE NAVEGACIÓN PREMIUM */}
       <nav style={{
         backgroundColor: '#0f172a',
         height: '70px',
@@ -46,7 +43,6 @@ function Layout({ children }) {
         width: '100%'
       }}>
         
-        {/* LOGO Y BRANDING */}
         <Link to="/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '1.8rem' }}>⚖️</span>
           <span style={{ color: '#ffffff', fontSize: '1.4rem', fontWeight: 'bold', letterSpacing: '0.5px' }}>PluriOne</span>
@@ -55,7 +51,6 @@ function Layout({ children }) {
           </span>
         </Link>
 
-        {/* MENÚ Y BOTONES DE ACCIÓN */}
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <Link to="/dashboard" style={{ 
             color: location.pathname === '/dashboard' ? '#ffffff' : '#94a3b8', 
@@ -91,7 +86,6 @@ function Layout({ children }) {
         </div>
       </nav>
 
-      {/* CONTENIDO DE LAS PÁGINAS */}
       <div style={{ flex: 1 }}>
         {children}
       </div>
@@ -113,8 +107,9 @@ function App() {
           <Route path="/nuevo-litigio" element={<NuevoLitigio />} />
           <Route path="/actualizar-juicio/:id" element={<ActualizarJuicio />} />
           <Route path="/detalle-juicio/:id" element={<DetalleJuicio />} />
-          <Route path="/registrar-usuario" element={<RegistrarUsuario />} />
           <Route path="/detalle-cliente/:id" element={<DetalleCliente />} />
+          
+          <Route path="/registrar-usuario" element={<RegistrarUsuario />} />
         </Routes>
       </Layout>
     </BrowserRouter>
