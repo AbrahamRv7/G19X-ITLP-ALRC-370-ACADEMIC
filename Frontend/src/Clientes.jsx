@@ -316,13 +316,21 @@ function Clientes() {
                         <td style={{ padding: '16px 10px', fontSize: '0.85rem', color: '#64748b' }}>
                           {formatearFecha(cliente.creado_en)}
                         </td>
-                        <td style={{ padding: '16px 10px', textAlign: 'center' }}>
-                          <button
-                            onClick={() => setClienteAEliminar(cliente)}
-                            style={{ padding: '6px 12px', backgroundColor: '#fff1f2', color: '#e11d48', border: '1px solid #fecdd3', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }}
-                          >
-                            🗑️ Eliminar
-                          </button>
+                      <td style={{ padding: '16px 10px', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                            <button
+                              onClick={() => navigate(`/detalle-cliente/${cliente.id}`, { state: { cliente } })}
+                              style={{ padding: '6px 12px', backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }}
+                            >
+                              👁️ Ficha 360°
+                            </button>
+                            <button
+                              onClick={() => setClienteAEliminar(cliente)}
+                              style={{ padding: '6px 12px', backgroundColor: '#fff1f2', color: '#e11d48', border: '1px solid #fecdd3', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }}
+                            >
+                              🗑️ Eliminar
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
