@@ -70,9 +70,9 @@ function EditarContrato() {
       tipo_contrato: formData.tipo_contrato,
       contraparte: formData.contraparte,
       departamento_solicitante: formData.departamento_solicitante,
-      fecha_firma: formData.fecha_firma ? `${formData.fecha_firma}T00:00:00` : null,
-      fecha_vencimiento: formData.fecha_vencimiento ? `${formData.fecha_vencimiento}T00:00:00` : null,
-      monto_operacion: parseFloat(formData.monto_operacion) || 0,
+       fecha_firma: formData.fecha_firma || null,
+      fecha_vencimiento: formData.fecha_vencimiento || null,
+       monto_operacion: formData.monto_operacion === '' ? 0 : parseFloat(formData.monto_operacion),
       estatus: formData.estatus
     };
 
@@ -82,7 +82,7 @@ function EditarContrato() {
       navigate('/dashboard');
     } catch (error) {
       toast.error('Error al actualizar el contrato.');
-      console.error(error);
+      console.error(error.response?.data || error); // Te ayudará a ver el error real en la consola F12
       setCargando(false);
     }
   };
