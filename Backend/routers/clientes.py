@@ -103,3 +103,20 @@ def eliminar_expediente(
     db.delete(expediente)
     db.commit()
     return {"mensaje": "Expediente eliminado correctamente"}
+
+@router.put("/expedientes/{expediente_id}/estado", response_model=ExpedienteResponse, tags=["3. Expedientes"])
+def actualizar_estado_expediente(
+    expediente_id: int,
+    datos: dict,
+    db: Session = Depends(database.get_db),
+    current_user: models.Usuario = Depends(get_current_user),
+):
+    expediente = db.query(models.Expediente).filter(models.Expediente.id == expediente_id).first()
+    if not expediente:
+        raise HTTPException(status_code=404, detail="Expediente no encontrado")
+    nuevo_estado = datos.get("estado")
+    if nuevo_estado:
+        expediente.estado = nuevo_estado
+    db.commit()
+    db.refresh(expediente)
+    return expediente

@@ -603,12 +603,26 @@ function Dashboard() {
                           </button>
                         </div>
 
-                        <button
-                          onClick={() => solicitarEliminacion(l.id, 'litigio', `Expediente ${l.expediente}`)}
-                          style={styles.btnDangerOutline}
-                        >
-                          🗑️ Eliminar
-                        </button>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+  <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 'bold', color: '#198754' }}>
+    Monto: {formatearDinero(c.monto_operacion || 0)}
+  </p>
+
+  <div style={{ display: 'flex', gap: '8px' }}>
+    <button
+      onClick={() => navigate(`/editar-contrato/${c.id}`, { state: { contrato: c } })}
+      style={{ padding: '6px 10px', backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.82rem' }}
+    >
+      ✏️ Editar
+    </button>
+    <button
+      onClick={() => solicitarEliminacion(c.id, 'contrato', `${c.tipo_contrato} (${c.contraparte})`)}
+      style={styles.btnDangerOutline}
+    >
+      🗑️ Eliminar
+    </button>
+  </div>
+</div>
                       </div>
                     </div>
                   ))}
