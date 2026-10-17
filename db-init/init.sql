@@ -1,57 +1,86 @@
--- 1. TIPOS DE DATOS RESTRINGIDOS (ENUMS)
--- Fundamentales para las métricas: evitan que un usuario escriba "Activo", "activo" o "ACTIVO", 
--- lo cual arruinaría las agrupaciones en tus gráficas del dashboard.
+-- =====================================================================
+-- ESQUEMA RELACIONAL COMPLETO: PLURIONE LEGALOPS
+-- Sincronizado 1:1 con Backend/models.py
+-- =====================================================================
 
-CREATE TYPE rol_usuario AS ENUM ('admin', 'abogado', 'viewer');
-CREATE TYPE estatus_contrato AS ENUM ('Borrador', 'En Revisión', 'Activo', 'Vencido', 'Terminado');
-CREATE TYPE materia_litigio AS ENUM ('Laboral', 'Mercantil', 'Civil', 'Fiscal', 'Administrativo');
-CREATE TYPE nivel_probabilidad AS ENUM ('Alta', 'Media', 'Baja');
+-- 1. Tipos Enumerados (Enums del dominio jurídico)
+DO $$ BEGIN
+    CREATE TYPE rolusuario AS ENUM ('admin', 'abogado', 'viewer');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- 2. TABLAS PRINCIPALES CON TRAZABILIDAD Y RELACIONES
+DO $$ BEGIN
+    CREATE TYPE estatuscontrato AS ENUM ('Borrador', 'En Revisión', 'Activo', 'Vencido', 'Terminado');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-CREATE TABLE usuarios (
+DO $$ BEGIN
+    CREATE TYPE materialitigio AS ENUM ('Laboral', 'Mercantil', 'Civil', 'Fiscal', 'Administrativo');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+    CREATE TYPE nivelprobabilidad AS ENUM ('Alta', 'Media', 'Baja');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+    CREATE TYPE estadoexpediente AS ENUM ('Abierto', 'En Proceso', 'Mediación', 'Sentencia', 'Cerrado');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+-- 2. Tabla de Usuarios (Control de acceso basado en roles RBAC)
+CREATE TABLE IF NOT EXISTS usuarios (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    rol rol_usuario DEFAULT 'viewer',
-    esta_activo BOOLEAN DEFAULT true, -- Borrado lógico (nunca se elimina el registro real)
+    rol rolusuario DEFAULT 'viewer',
+    esta_activo BOOLEAN DEFAULT TRUE,
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE contratos (
+-- 3. Tabla de Clientes (Padrón corporativo CRM Legal)
+CREATE TABLE IF NOT EXISTS clientes (
     id SERIAL PRIMARY KEY,
-    usuario_responsable_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL, -- Relación: ¿Quién lo gestiona?
-    tipo_contrato VARCHAR(100) NOT NULL, 
+    nombre_completo VARCHAR(150) NOT NULL,
+    rfc VARCHAR(13) UNIQUE,
+    correo VARCHAR(100) UNIQUE,
+    telefono VARCHAR(20),
+    creado_en TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. Tabla de Contratos (Instrumentos jurídicos vinculados a clientes y abogados)
+CREATE TABLE IF NOT EXISTS contratos (
+    id SERIAL PRIMARY KEY,
+    usuario_responsable_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    cliente_id INTEGER REFERENCES clientes(id) ON DELETE SET NULL,
+    tipo_contrato VARCHAR(100) NOT NULL,
     contraparte VARCHAR(150) NOT NULL,
     departamento_solicitante VARCHAR(100) NOT NULL,
-    fecha_firma DATE,
-    fecha_vencimiento DATE,
-    monto_operacion DECIMAL(15, 2) DEFAULT 0.00,
-    estatus estatus_contrato DEFAULT 'Activo',
+    fecha_firma TIMESTAMP,
+    fecha_vencimiento TIMESTAMP,
+    monto_operacion NUMERIC(15, 2) DEFAULT 0.00,
+    estatus estatuscontrato DEFAULT 'Activo',
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE litigios (
+-- 5. Tabla de Litigios / Juicios (Control de contingencias y fases procesales)
+CREATE TABLE IF NOT EXISTS litigios (
     id SERIAL PRIMARY KEY,
-    usuario_responsable_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL, -- Relación: Abogado a cargo
+    usuario_responsable_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    cliente_id INTEGER REFERENCES clientes(id) ON DELETE SET NULL,
     expediente VARCHAR(50) UNIQUE NOT NULL,
-    materia materia_litigio NOT NULL,
+    contraparte VARCHAR(150),
+    juzgado VARCHAR(150),
+    materia materialitigio NOT NULL,
     fase_procesal VARCHAR(100) NOT NULL,
-    monto_contingencia DECIMAL(15, 2) DEFAULT 0.00,
-    probabilidad_exito nivel_probabilidad,
-    esta_activo BOOLEAN DEFAULT true,
+    monto_contingencia NUMERIC(15, 2) DEFAULT 0.00,
+    probabilidad_exito nivelprobabilidad,
+    esta_activo BOOLEAN DEFAULT TRUE,
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. NUEVA TABLA: HISTORIAL DE MOVIMIENTOS (EL MOTOR DE LOS KPIs)
--- Esta tabla te dará la métrica más valiosa para el área jurídica: 
--- "Cuánto tiempo promedio pasa un juicio estancado en cada fase".
-
-CREATE TABLE historial_litigios (
+-- 6. Tabla de Historial de Litigios (Bitácora para cálculo de tiempos por fase)
+CREATE TABLE IF NOT EXISTS historial_litigios (
     id SERIAL PRIMARY KEY,
     litigio_id INTEGER NOT NULL REFERENCES litigios(id) ON DELETE CASCADE,
     usuario_modificador_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
@@ -59,4 +88,17 @@ CREATE TABLE historial_litigios (
     fase_nueva VARCHAR(100) NOT NULL,
     comentarios TEXT,
     fecha_cambio TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 7. Tabla de Expedientes Generales
+CREATE TABLE IF NOT EXISTS expedientes (
+    id SERIAL PRIMARY KEY,
+    numero_expediente VARCHAR(50) UNIQUE NOT NULL,
+    titulo VARCHAR(200) NOT NULL,
+    descripcion TEXT,
+    estado estadoexpediente DEFAULT 'Abierto',
+    cliente_id INTEGER NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
+    abogado_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT,
+    creado_en TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en TIMESTAMPTZ
 );

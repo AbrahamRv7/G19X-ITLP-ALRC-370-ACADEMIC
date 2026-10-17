@@ -20,3 +20,7 @@ __pycache__/
 .env
 *.db
 *.sqlite3
+
+*.env
+.env*
+!.env.example

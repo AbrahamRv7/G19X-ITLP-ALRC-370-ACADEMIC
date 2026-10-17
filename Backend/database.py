@@ -1,24 +1,23 @@
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
 
-# Conexión apuntando directamente a tu base de datos en la nube (Render)
-SQLALCHEMY_DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    "postgresql+psycopg://plurione_db_user:losw7ovnwgKbsIDDMurfX7XcbZvkJxwo@dpg-db467pbncjis73bussrg-a.ohio-postgres.render.com/plurione_db" 
-)
+load_dotenv()
 
-if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
-    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
-elif SQLALCHEMY_DATABASE_URL.startswith("postgresql://") and not SQLALCHEMY_DATABASE_URL.startswith("postgresql+psycopg"):
-    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Crear el "motor" que se comunicará con PostgreSQL
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+if not DATABASE_URL:
+    raise RuntimeError("ERROR CRÍTICO: La variable de entorno DATABASE_URL no está configurada.")
+
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Función para inyectar la base de datos en nuestras rutas
 def get_db():
     db = SessionLocal()
     try:
