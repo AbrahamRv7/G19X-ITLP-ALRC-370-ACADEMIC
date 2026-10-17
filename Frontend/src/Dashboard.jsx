@@ -283,7 +283,6 @@ function Dashboard() {
   const formatearDinero = (monto) =>
     new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(monto || 0);
 
-  // Gráfica de pastel alimentada desde el endpoint /dashboard/kpis del Backend
   const datosPastel = Object.entries(kpisBackend.litigios_por_materia || {}).map(([name, value]) => ({
     name,
     value
@@ -336,7 +335,7 @@ function Dashboard() {
           <div style={{ textAlign: 'center', padding: '50px', color: '#6c757d' }}>Cargando métricas jurídicas...</div>
         ) : (
           <>
-            {/* SECCIÓN 1: 4 KPIs DESDE EL BACKEND (/dashboard/kpis) */}
+            {/* SECCIÓN 1: 4 KPIs DESDE EL BACKEND */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '30px' }}>
               <div style={styles.kpiCard}>
                 <div>
@@ -403,13 +402,11 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* SECCIÓN 3: NUEVAS MÉTRICAS JURÍDICAS (/metricas/*) */}
+            {/* SECCIÓN 3: NUEVAS MÉTRICAS JURÍDICAS */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '30px' }}>
-              
-              {/* 1. Tiempo promedio por fase procesal */}
               <div style={{ ...styles.card, height: '320px' }}>
-                <h3 style={{ margin: '0 0 6px 0', color: '#0f172a', fontSize: '1.05rem' }}>⏱️ Duración Promedio por Fase (Días)</h3>
-                <p style={{ margin: '0 0 12px 0', fontSize: '0.8rem', color: '#64748b' }}>Calculado desde la bitácora historial_litigios</p>
+                <h3 style={{ margin: '0 0 6px 0', color: '#0f172a', fontSize: '1.05rem' }}>⏱️ Duración Promedio por Fase</h3>
+                <p style={{ margin: '0 0 12px 0', fontSize: '0.8rem', color: '#64748b' }}>Calculado desde la bitácora procesal</p>
                 {tiemposPorFase.length === 0 ? (
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Sin datos suficientes aún.</p>
                 ) : (
@@ -425,9 +422,8 @@ function Dashboard() {
                 )}
               </div>
 
-              {/* 2. Riesgo financiero por probabilidad de éxito */}
               <div style={{ ...styles.card, height: '320px' }}>
-                <h3 style={{ margin: '0 0 6px 0', color: '#0f172a', fontSize: '1.05rem' }}>📊 Exposición por Probabilidad de Éxito</h3>
+                <h3 style={{ margin: '0 0 6px 0', color: '#0f172a', fontSize: '1.05rem' }}>📊 Exposición por Probabilidad</h3>
                 <p style={{ margin: '0 0 15px 0', fontSize: '0.8rem', color: '#64748b' }}>Endpoint: /metricas/riesgo-financiero</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {riesgoPorProbabilidad.length === 0 ? (
@@ -447,9 +443,8 @@ function Dashboard() {
                 </div>
               </div>
 
-              {/* 3. Carga de trabajo por abogado */}
               <div style={{ ...styles.card, height: '320px', overflowY: 'auto' }}>
-                <h3 style={{ margin: '0 0 6px 0', color: '#0f172a', fontSize: '1.05rem' }}>👩‍⚖️ Carga de Trabajo por Abogado</h3>
+                <h3 style={{ margin: '0 0 6px 0', color: '#0f172a', fontSize: '1.05rem' }}>👩‍⚖️ Carga por Abogado</h3>
                 <p style={{ margin: '0 0 15px 0', fontSize: '0.8rem', color: '#64748b' }}>Endpoint: /metricas/carga-trabajo</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {cargaTrabajo.map((u) => (
@@ -466,7 +461,6 @@ function Dashboard() {
                   ))}
                 </div>
               </div>
-
             </div>
 
             {/* SECCIÓN 4: LISTADOS OPERATIVOS */}
@@ -533,12 +527,20 @@ function Dashboard() {
                           Monto: {formatearDinero(c.monto_operacion || 0)}
                         </p>
 
-                        <button
-                          onClick={() => solicitarEliminacion(c.id, 'contrato', `${c.tipo_contrato} (${c.contraparte})`)}
-                          style={styles.btnDangerOutline}
-                        >
-                          🗑️ Eliminar
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={() => navigate(`/editar-contrato/${c.id}`, { state: { contrato: c } })}
+                            style={{ padding: '6px 10px', backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.82rem' }}
+                          >
+                            ✏️ Editar
+                          </button>
+                          <button
+                            onClick={() => solicitarEliminacion(c.id, 'contrato', `${c.tipo_contrato} (${c.contraparte})`)}
+                            style={styles.btnDangerOutline}
+                          >
+                            🗑️ Eliminar
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -602,27 +604,13 @@ function Dashboard() {
                             ⚖️ Diagnóstico
                           </button>
                         </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
-  <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 'bold', color: '#198754' }}>
-    Monto: {formatearDinero(c.monto_operacion || 0)}
-  </p>
-
-  <div style={{ display: 'flex', gap: '8px' }}>
-    <button
-      onClick={() => navigate(`/editar-contrato/${c.id}`, { state: { contrato: c } })}
-      style={{ padding: '6px 10px', backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.82rem' }}
-    >
-      ✏️ Editar
-    </button>
-    <button
-      onClick={() => solicitarEliminacion(c.id, 'contrato', `${c.tipo_contrato} (${c.contraparte})`)}
-      style={styles.btnDangerOutline}
-    >
-      🗑️ Eliminar
-    </button>
-  </div>
-</div>
+                        
+                        <button
+                          onClick={() => solicitarEliminacion(l.id, 'litigio', `Exp. ${l.expediente}`)}
+                          style={styles.btnDangerOutline}
+                        >
+                          🗑️ Eliminar
+                        </button>
                       </div>
                     </div>
                   ))}
