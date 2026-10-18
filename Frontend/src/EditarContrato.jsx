@@ -65,24 +65,27 @@ function EditarContrato() {
     e.preventDefault();
     setCargando(true);
 
+    // Limpiamos los datos para cumplir con el tipado exacto del backend FastAPI / PostgreSQL
     const payload = {
       cliente_id: formData.cliente_id ? parseInt(formData.cliente_id, 10) : null,
       tipo_contrato: formData.tipo_contrato,
       contraparte: formData.contraparte,
       departamento_solicitante: formData.departamento_solicitante,
-       fecha_firma: formData.fecha_firma || null,
+      fecha_firma: formData.fecha_firma || null, 
       fecha_vencimiento: formData.fecha_vencimiento || null,
-       monto_operacion: formData.monto_operacion === '' ? 0 : parseFloat(formData.monto_operacion),
+      // Se asegura de convertir siempre a Float y si falla o está vacío manda 0.00
+      monto_operacion: isNaN(parseFloat(formData.monto_operacion)) ? 0.00 : parseFloat(formData.monto_operacion),
       estatus: formData.estatus
     };
 
     try {
+      // El backend espera el body en JSON limpio sin la letra "T" en las fechas ni Strings en los montos.
       await api.put(`/contratos/${id}`, payload);
       toast.success('Contrato actualizado correctamente');
       navigate('/dashboard');
     } catch (error) {
       toast.error('Error al actualizar el contrato.');
-      console.error(error.response?.data || error); // Te ayudará a ver el error real en la consola F12
+      console.error("Fallo de Backend:", error.response?.data || error);
       setCargando(false);
     }
   };
