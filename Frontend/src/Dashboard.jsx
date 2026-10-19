@@ -295,6 +295,24 @@ function Dashboard() {
     }, {})
   ).map(([name, cantidad]) => ({ name, cantidad }));
 
+  // --- CÁLCULO EN TIEMPO REAL: ALERTAS DE VENCIMIENTO ---
+  const calcularPorVencer = () => {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const limite30Dias = new Date(hoy);
+    limite30Dias.setDate(hoy.getDate() + 30);
+
+    return contratos.filter(c => {
+      // Ignoramos los que no tienen fecha o ya están cerrados/vencidos formalmente
+      if (!c.fecha_vencimiento || c.estatus === 'Terminado' || c.estatus === 'Vencido') return false;
+      const fechaVencimiento = new Date(`${c.fecha_vencimiento.split('T')[0]}T00:00:00`);
+      // Validamos que la fecha caiga entre hoy y los próximos 30 días
+      return fechaVencimiento >= hoy && fechaVencimiento <= limite30Dias;
+    }).length;
+  };
+  
+  const cantidadPorVencer = calcularPorVencer();
+
   const styles = {
     pageBg: { backgroundColor: '#f4f7f6', minHeight: '100vh', padding: '40px 20px', fontFamily: "'Segoe UI', Roboto, sans-serif" },
     container: { maxWidth: '1240px', margin: '0 auto' },
@@ -335,7 +353,7 @@ function Dashboard() {
           <div style={{ textAlign: 'center', padding: '50px', color: '#6c757d' }}>Cargando métricas jurídicas...</div>
         ) : (
           <>
-            {/* SECCIÓN 1: 4 KPIs DESDE EL BACKEND */}
+            {/* SECCIÓN 1: 4 KPIs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '30px' }}>
               <div style={styles.kpiCard}>
                 <div>
@@ -349,7 +367,8 @@ function Dashboard() {
               <div style={{ ...styles.kpiCard, borderLeftColor: '#eab308' }}>
                 <div>
                   <h3 style={styles.kpiTitle}>Por Vencer (≤ 30 días)</h3>
-                  <p style={{ ...styles.kpiNumber, color: '#b45309' }}>{kpisBackend.contratos_por_vencer_30_dias || 0}</p>
+                  {/* Aquí conectamos la alerta local para máxima precisión */}
+                  <p style={{ ...styles.kpiNumber, color: '#b45309' }}>{cantidadPorVencer}</p>
                   <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Alerta preventiva</span>
                 </div>
                 <div style={{ fontSize: '2.5rem', opacity: 0.8 }}>⏳</div>
