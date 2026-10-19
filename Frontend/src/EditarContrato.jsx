@@ -65,13 +65,15 @@ function EditarContrato() {
     e.preventDefault();
     setCargando(true);
 
-    // Solo enviamos los 5 campos que existen en el modelo Pydantic y en la BD
     const payload = {
       cliente_id: formData.cliente_id ? parseInt(formData.cliente_id, 10) : null,
       tipo_contrato: formData.tipo_contrato,
       contraparte: formData.contraparte,
-      estatus: formData.estatus,
-      monto_operacion: isNaN(parseFloat(formData.monto_operacion)) ? 0.00 : parseFloat(formData.monto_operacion)
+      departamento_solicitante: formData.departamento_solicitante,
+      fecha_firma: formData.fecha_firma || null, 
+      fecha_vencimiento: formData.fecha_vencimiento || null,
+      monto_operacion: formData.monto_operacion === '' ? 0 : parseFloat(formData.monto_operacion),
+      estatus: formData.estatus
     };
 
     try {
