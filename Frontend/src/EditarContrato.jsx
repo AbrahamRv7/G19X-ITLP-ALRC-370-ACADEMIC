@@ -61,25 +61,20 @@ function EditarContrato() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const manejarEnvio = async (e) => {
+ const manejarEnvio = async (e) => {
     e.preventDefault();
     setCargando(true);
 
-    // Limpiamos los datos para cumplir con el tipado exacto del backend FastAPI / PostgreSQL
+    // Solo enviamos los 5 campos que existen en el modelo Pydantic y en la BD
     const payload = {
       cliente_id: formData.cliente_id ? parseInt(formData.cliente_id, 10) : null,
       tipo_contrato: formData.tipo_contrato,
       contraparte: formData.contraparte,
-      departamento_solicitante: formData.departamento_solicitante,
-      fecha_firma: formData.fecha_firma || null, 
-      fecha_vencimiento: formData.fecha_vencimiento || null,
-      // Se asegura de convertir siempre a Float y si falla o está vacío manda 0.00
-      monto_operacion: isNaN(parseFloat(formData.monto_operacion)) ? 0.00 : parseFloat(formData.monto_operacion),
-      estatus: formData.estatus
+      estatus: formData.estatus,
+      monto_operacion: isNaN(parseFloat(formData.monto_operacion)) ? 0.00 : parseFloat(formData.monto_operacion)
     };
 
     try {
-      // El backend espera el body en JSON limpio sin la letra "T" en las fechas ni Strings en los montos.
       await api.put(`/contratos/${id}`, payload);
       toast.success('Contrato actualizado correctamente');
       navigate('/dashboard');
