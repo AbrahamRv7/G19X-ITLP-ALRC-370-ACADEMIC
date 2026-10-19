@@ -14,6 +14,7 @@ function EditarContrato() {
 
   const limpiarFecha = (fechaIso) => (fechaIso ? fechaIso.split('T')[0] : '');
 
+  // 1. Agregamos usuario_responsable_id al estado inicial
   const [formData, setFormData] = useState({
     cliente_id: contratoInicial?.cliente_id || '',
     tipo_contrato: contratoInicial?.tipo_contrato || '',
@@ -22,7 +23,8 @@ function EditarContrato() {
     fecha_firma: limpiarFecha(contratoInicial?.fecha_firma),
     fecha_vencimiento: limpiarFecha(contratoInicial?.fecha_vencimiento),
     monto_operacion: contratoInicial?.monto_operacion ?? '',
-    estatus: contratoInicial?.estatus || 'Activo'
+    estatus: contratoInicial?.estatus || 'Activo',
+    usuario_responsable_id: contratoInicial?.usuario_responsable_id || 1 
   });
 
   useEffect(() => {
@@ -45,7 +47,8 @@ function EditarContrato() {
               fecha_firma: limpiarFecha(encontrado.fecha_firma),
               fecha_vencimiento: limpiarFecha(encontrado.fecha_vencimiento),
               monto_operacion: encontrado.monto_operacion ?? '',
-              estatus: encontrado.estatus || 'Activo'
+              estatus: encontrado.estatus || 'Activo',
+              usuario_responsable_id: encontrado.usuario_responsable_id || 1
             });
           }
         }
@@ -61,10 +64,11 @@ function EditarContrato() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
- const manejarEnvio = async (e) => {
+  const manejarEnvio = async (e) => {
     e.preventDefault();
     setCargando(true);
 
+    // 2. Incluimos la variable faltante que exige el Backend en el Payload
     const payload = {
       cliente_id: formData.cliente_id ? parseInt(formData.cliente_id, 10) : null,
       tipo_contrato: formData.tipo_contrato,
@@ -73,7 +77,8 @@ function EditarContrato() {
       fecha_firma: formData.fecha_firma || null, 
       fecha_vencimiento: formData.fecha_vencimiento || null,
       monto_operacion: formData.monto_operacion === '' ? 0 : parseFloat(formData.monto_operacion),
-      estatus: formData.estatus
+      estatus: formData.estatus,
+      usuario_responsable_id: parseInt(formData.usuario_responsable_id, 10) 
     };
 
     try {
