@@ -15,11 +15,17 @@ def crear_litigio(
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user),
 ):
-    datos = litigio.model_dump(exclude={"contraparte", "juzgado", "probabilidad_exito"})
-    
+    datos = litigio.model_dump()
+
     if not datos.get("usuario_responsable_id"):
         datos["usuario_responsable_id"] = current_user.id
-        
+
+    if datos.get("materia"):
+        datos["materia"] = datos["materia"].capitalize()
+
+    if datos.get("probabilidad_exito"):
+        datos["probabilidad_exito"] = datos["probabilidad_exito"].capitalize()
+
     try:
         nuevo_litigio = models.Litigio(**datos)
         db.add(nuevo_litigio)
@@ -28,9 +34,11 @@ def crear_litigio(
         return nuevo_litigio
     except Exception as e:
         db.rollback()
-        # TEMPORALMENTE para ver qué nos dice la BD:
-        raise HTTPException(status_code=400, detail=str(e))
-
+        print(f"Error real en BD: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail="Error al crear el litigio. Verifique que el expediente no esté duplicado y los datos sean correctos."
+        )
 @router.get("")
 def obtener_litigios(
     db: Session = Depends(database.get_db),
