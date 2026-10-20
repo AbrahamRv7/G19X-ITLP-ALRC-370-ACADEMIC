@@ -28,8 +28,9 @@ def crear_litigio(
         return nuevo_litigio
     except Exception as e:
         db.rollback()
-        print(f"Error real: {e}") 
-        raise HTTPException(status_code=400, detail="Error al crear el litigio. Verifique que el expediente no esté duplicado y los datos sean correctos.")
+        # TEMPORALMENTE para ver qué nos dice la BD:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @router.get("")
 def obtener_litigios(
     db: Session = Depends(database.get_db),
