@@ -65,50 +65,17 @@ class UsuarioResponse(BaseModel):
 # ==========================================
 
 class ContratoCreate(BaseModel):
-    cliente_id: Optional[int] = None
-    tipo_contrato: str = Field(
-        ..., 
-        title="Tipo de Contrato", 
-        examples=["Prestación de Servicios"]
-    )
-    contraparte: str = Field(
-        ..., 
-        title="Contraparte", 
-        examples=["Soluciones Tecnológicas S.A. de C.V."]
-    )
-    departamento_solicitante: str = Field(
-        ..., 
-        title="Departamento Solicitante", 
-        examples=["Recursos Humanos"]
-    )
-    fecha_firma: date = Field(
-        ..., 
-        title="Fecha de Firma", 
-        examples=["2026-10-01"]
-    )
-    fecha_vencimiento: date = Field(
-        ..., 
-        title="Fecha de Vencimiento", 
-        examples=["2027-10-01"]
-    )
-    monto_operacion: float = Field(
-        ..., 
-        title="Monto de la Operación", 
-        examples=[150000.50]
-    )
-    estatus: str = Field(
-        ..., 
-        title="Estatus Actual", 
-        examples=["Activo"]
-    )
-    usuario_responsable_id: int = Field(
-        ..., 
-        title="ID del Responsable", 
-        examples=[1]
-    )
+    cliente_id: int = Field(..., title="ID del Cliente Asociado")
+    tipo_contrato: str = Field(..., title="Tipo de Contrato")
+    contraparte: str = Field(..., title="Contraparte")
+    departamento_solicitante: str = Field(..., title="Departamento Solicitante")
+    fecha_firma: date = Field(..., title="Fecha de Firma")
+    fecha_vencimiento: date = Field(..., title="Fecha de Vencimiento")
+    monto_operacion: float = Field(..., title="Monto de la Operación")
+    estatus: str = Field(..., title="Estatus Actual")
+    usuario_responsable_id: Optional[int] = None
 
 class ContratoResponse(ContratoCreate):
-    cliente_id: Optional[int] = None
     id: int
     creado_en: datetime
     model_config = {"from_attributes": True}
