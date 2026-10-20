@@ -20,7 +20,9 @@ El sistema opera bajo una arquitectura en la nube escalable y separada en tres c
 
 - **Frontend (Cliente):** Aplicación de una sola página (SPA) desarrollada con React y Vite, desplegada en **Vercel**. Proporciona una interfaz fluida, analítica visual con Recharts y diseño responsivo.
 - **Backend (API Rest):** Motor transaccional construido con Python y FastAPI, desplegado en **Render**. Gestiona la lógica de negocio, autenticación segura y endpoints automáticos.
-- **Base de Datos:** Base de datos relacional alojada en **PostgreSQL** (vía Render), con esquemas administrados mediante SQLAlchemy y auto-migraciones.
+- **Base de Datos:** Base de datos relacional alojada en **PostgreSQL** (Contenedor Dockerizado para desarrollo local / Render en producción), con esquemas administrados mediante SQLAlchemy y auto-migraciones.
+
+> **Nota sobre el Asistente Jurídico:** Para esta fase del MVP, el "Asistente" evalúa expedientes mediante un motor de reglas jurídicas procesales basado en lógica estructurada y palabras clave, sin depender de llamadas a APIs externas de LLMs.
 
 ---
 
@@ -56,15 +58,16 @@ El sistema opera bajo una arquitectura en la nube escalable y separada en tres c
 4. **Panel de Indicadores (Dashboard):** 
    * KPIs financieros calculando el riesgo económico global de la empresa.
    * Gráficas de distribución de carga legal (Juicios por Materia y Estatus de Contratos).
+   * Métricas de rendimiento y tiempos promedio por fase procesal.
 5. **Seguridad y Control de Acceso:** 
-   * Rutas protegidas. 
-   * Autenticación vía JWT y endpoints de registro para administradores y abogados.
+   * Rutas protegidas mediante `Depends(get_current_user)` en FastAPI.
+   * Autenticación vía JWT y endpoints de registro restringidos exclusivamente para administradores.
 
 ---
 
 ## 🔐 Instalación y Despliegue Local
 
-Para ejecutar el proyecto en un entorno de desarrollo local:
+Para ejecutar el proyecto en un entorno de desarrollo local, asegúrate de tener instalados **Node.js (18+)**, **Python (3.10+)** y **Docker / Docker Compose**.
 
 ### 1. Clonar el repositorio
 ```bash
@@ -72,25 +75,45 @@ git clone https://github.com/AbrahamRv7/G19X-ITLP-ALRC-370-ACADEMIC.git
 cd G19X-ITLP-ALRC-370-ACADEMIC
 ```
 
-### 2. Configurar el Backend
+### 2. Configurar Base de Datos y Variables de Entorno
+En la carpeta `Backend`, copia el archivo `.env.example` y renómbralo a `.env`. Ajusta las variables si es necesario:
+```bash
+cp Backend/.env.example Backend/.env
+```
+Luego, desde la raíz del proyecto, inicia el contenedor de PostgreSQL para cargar el script inicial (`db-init/init.sql`):
+```bash
+docker-compose up -d
+```
+
+### 3. Configurar y Ejecutar el Backend
 ```bash
 cd Backend
 python -m venv .venv
-source .venv/Scripts/activate  # En Windows
+# Activar el entorno virtual:
+# En Windows: .venv\Scripts\activate
+# En Mac/Linux: source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn main:app --reload
+uvicorn main:app --reload --port 8000
 ```
+*La API estará disponible en `http://localhost:8000` y Swagger UI en `http://localhost:8000/docs`.*
 
-### 3. Configurar el Frontend
+### 4. Configurar y Ejecutar el Frontend
 En una nueva terminal:
 ```bash
 cd Frontend
 npm install
 npm run dev
 ```
+*La aplicación web estará disponible en `http://localhost:5173`.*
+
+---
+
+## 🔑 Usuario de Prueba Local
+Al ejecutar el backend por primera vez, el sistema creará un usuario administrador automático basándose en las credenciales proporcionadas en tu archivo `.env` (`INITIAL_ADMIN_EMAIL` e `INITIAL_ADMIN_PASSWORD`). Utiliza estas credenciales para iniciar sesión en la interfaz.
 
 ---
 
 ## 👨‍💻 Autor
 **Abraham Rivera**  
 Estudiante de 8vo Semestre | Ingeniería en Sistemas Computacionales | Instituto Tecnológico de La Piedad
+
