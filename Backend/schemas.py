@@ -2,6 +2,10 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import date, datetime
 
+class LitigioFaseUpdate(BaseModel):
+    fase_procesal: str
+    comentarios: Optional[str] = "Cambio de fase registrado sin comentarios adicionales."
+
 class ContratoEstatusUpdate(BaseModel):
     estatus: str
 
