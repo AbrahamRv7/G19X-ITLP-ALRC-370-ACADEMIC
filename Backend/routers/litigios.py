@@ -114,7 +114,7 @@ def analizar_litigio(
         analisis += "- En fase de desahogo."
         
     return {"analisis": analisis}
-
+# 5. Endpoint de Chat Interactivo (Motor de Reglas y Recomendaciones)
 @router.post("/{litigio_id}/chat")
 def chat_litigio(
     litigio_id: int,
@@ -122,11 +122,139 @@ def chat_litigio(
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user),
 ):
-    texto = consulta.get("texto", "").lower()
-    if "tiempo" in texto:
-        respuesta = "El tiempo promedio en esta fase es de 30 a 60 días hábiles."
-    elif "acuerdo" in texto:
-        respuesta = "Es recomendable buscar conciliación para reducir la contingencia."
-    else:
-        respuesta = "El sistema experto ha registrado tu consulta."
-    return {"respuesta": respuesta}
+    # Intentamos obtener el litigio para dar respuestas personalizadas y contextuales
+    litigio = db.query(models.Litigio).filter(models.Litigio.id == litigio_id).first()
+    if not litigio:
+        raise HTTPException(status_code=404, detail="Litigio no encontrado")
+
+    texto = consulta.get("texto", "").lower().strip()
+    
+    # 1. SALUDO
+    if any(palabra in texto for palabra in ["hola", "buenos dias", "buenas tardes", "saludos", "que tal"]):
+        return {
+            "respuesta": (
+                f"👋 ¡Hola, {current_user.nombre}! Soy el Asistente Experto de PluriOne.\n\n"
+                f"Estoy listo para analizar el expediente **{litigio.expediente}** ({litigio.materia}). "
+                "¿En qué puedo apoyarte hoy? Puedes pedirme una *recomendación*, preguntarme sobre el *tiempo* estimado, el *riesgo* o pedir *ayuda* para ver qué puedo hacer."
+            )
+        }
+
+    # 2. AYUDA / QUÉ PUEDES RESPONDER
+    elif any(palabra in texto for palabra in ["ayuda", "que puedes", "que haces", "funciones", "como funcionas", "que responder"]):
+        return {
+            "respuesta": (
+                "🤖 Como sistema experto, analizo los datos de este expediente para darte diagnósticos y estrategias. Puedes preguntarme:\n\n"
+                "🔹 **'Dame una recomendación'** - Sugerencias estratégicas del caso.\n"
+                "🔹 **'¿Cuál es el riesgo?'** - Análisis del impacto financiero y probabilidad.\n"
+                "🔹 **'¿Cuánto tiempo se llevará?'** - Estimación de plazos según la fase.\n"
+                "🔹 **'¿Qué sigue?'** - Próximos pasos procesales para la fase actual.\n"
+                "🔹 **'Resumen'** - Estado actual del juicio."
+            )
+        }
+
+    # 3. RECOMENDACIÓN / CONSEJO / QUÉ HAGO
+    elif any(palabra in texto for palabra in ["recomen", "consejo", "que hago", "estrategia", "sugerencia"]):
+        recomendaciones = []
+        
+        # Regla por Probabilidad de Éxito
+        if "baja" in (litigio.probabilidad_exito or "").lower():
+            recomendaciones.append("🚨 **Alerta de viabilidad**: La probabilidad de éxito es BAJA. Se sugiere evaluar urgentemente una estrategia de negociación o un convenio fuera de juicio para mitigar pérdidas.")
+        elif "media" in (litigio.probabilidad_exito or "").lower():
+            recomendaciones.append("⚠️ **Estrategia equilibrada**: El caso tiene un panorama incierto. Conviene robustecer el desahogo de pruebas y preparar alternativas de conciliación.")
+        else:
+            recomendaciones.append("✅ **Estrategia sólida**: La probabilidad de éxito es ALTA. Mantengan el rigor procesal para consolidar la resolución favorable.")
+
+        # Regla por Monto en Contingencia
+        if litigio.monto_contingencia >= 1000000:
+            recomendaciones.append(f"💸 **Impacto Financiero Crítico**: Al superar el millón de pesos (${litigio.monto_contingencia:,.2f}), se recomienda crear una provisión contable de contingencia para este caso.")
+        
+        # Regla por Fase Procesal
+        if "demanda" in litigio.fase_procesal.lower():
+            recomendaciones.append("📂 **Acción en fase inicial**: Aseguren que el traslado y emplazamiento se hayan realizado con estricto apego a la ley para evitar vicios en el procedimiento.")
+        elif "pruebas" in litigio.fase_procesal.lower() or "desahogo" in litigio.fase_procesal.lower():
+            recomendaciones.append("🔎 **Acción en fase de pruebas**: Prioricen la preparación de peritajes y testimoniales clave. No dejen pasar los plazos de objeción.")
+        elif "sentencia" in litigio.fase_procesal.lower() or "alegatos" in litigio.fase_procesal.lower():
+            recomendaciones.append("⚖️ **Acción en fase resolutiva**: Se han cerrado las etapas de debate. Monitoreen el juzgado diariamente para reaccionar de inmediato a la notificación de la sentencia y preparar posibles recursos (amparo/apelación).")
+
+        # Regla por Materia
+        if litigio.materia.lower() == "laboral":
+            recomendaciones.append("👥 **Nota laboral**: Recuerda que en esta materia la carga de la prueba suele ser del patrón. Aseguren tener expedientes de personal completos.")
+        elif litigio.materia.lower() == "mercantil":
+            recomendaciones.append("💼 **Nota mercantil**: Evalúen si es viable solicitar medidas cautelares o embargos preventivos para garantizar el pago del adeudo.")
+
+        respuesta_final = "💡 **Análisis Recomendado** para este caso:\n\n" + "\n\n".join(recomendaciones)
+        return {"respuesta": respuesta_final}
+
+    # 4. RIESGO / DINERO / MONTO
+    elif any(palabra in texto for palabra in ["riesgo", "monto", "dinero", "perder", "contingencia", "cuanto es"]):
+        impacto = "Crítico" if litigio.monto_contingencia >= 1000000 else "Moderado" if litigio.monto_contingencia >= 100000 else "Bajo"
+        return {
+            "respuesta": (
+                f"💰 **Análisis de Riesgo Financiero:**\n\n"
+                f"• **Monto en Contingencia:** ${litigio.monto_contingencia:,.2f} MXN\n"
+                f"• **Probabilidad de Éxito:** {litigio.probabilidad_exito or 'No asignada'}\n"
+                f"• **Nivel de Impacto:** **{impacto}**\n\n"
+                "Para proteger las finanzas corporativas, se aconseja " + 
+                ("la autorización de reservas financieras de contingencia de inmediato." if impacto == "Crítico" else "dar seguimiento preventivo sin congelar flujos.")
+            )
+        }
+
+    # 5. TIEMPO / PLAZOS / CUANDO / CUÁNTO
+    elif any(palabra in texto for palabra in ["tiempo", "plazo", "cuando", "cuanto", "duracion", "fase"]):
+        # Tiempos estimados estándar en México por materia
+        dias_estimados = "60 a 90 días" if litigio.materia.lower() == "laboral" else "90 a 120 días" if litigio.materia.lower() == "civil" else "45 a 90 días"
+        return {
+            "respuesta": (
+                f"⏱️ **Estimaciones de Tiempo (Fase: {litigio.fase_procesal}):**\n\n"
+                f"• Según nuestro historial, un litigio **{litigio.materia}** en esta etapa procesal suele requerir un promedio de **{dias_estimados}** hábiles para avanzar a la siguiente fase.\n"
+                f"• **Recomendación:** Monitorea de cerca la bitácora procesal en PluriOne para detectar si el caso excede este periodo promedio sin actividad judicial."
+            )
+        }
+
+    # 6. QUÉ SIGUE / PROCESO
+    elif any(palabra in texto for palabra in ["que sigue", "proximos pasos", "que pasa", "fase siguiente"]):
+        fase = litigio.fase_procesal.lower()
+        if "demanda" in fase:
+            sig = "Emplazamiento y Contestación de la Demanda."
+        elif "pruebas" in fase or "desahogo" in fase:
+            sig = "Etapa de Alegatos finales y conclusiones."
+        elif "sentencia" in fase:
+            sig = "Ejecución de sentencia, o bien, impugnaciones (Apelación / Amparo)."
+        else:
+            sig = "Revisión de acuerdos previos y preparación del siguiente recurso legal."
+            
+        return {
+            "respuesta": (
+                f"⏭️ **Próximos Pasos Procesales:**\n\n"
+                f"El caso está en **{litigio.fase_procesal}**.\n"
+                f"• El siguiente paso natural es: **{sig}**\n"
+                f"• Asegúrate de validar que no haya promociones pendientes de acordar en el juzgado."
+            )
+        }
+
+    # 7. RESUMEN / ESTADO
+    elif any(palabra in texto for palabra in ["resumen", "detalles", "expediente", "caso", "estado"]):
+        return {
+            "respuesta": (
+                f"📋 **Resumen del Expediente {litigio.expediente}**:\n\n"
+                f"• **Materia:** {litigio.materia}\n"
+                f"• **Contraparte:** {litigio.contraparte or 'No registrada'}\n"
+                f"• **Juzgado:** {litigio.juzgado or 'No registrado'}\n"
+                f"• **Fase Actual:** {litigio.fase_procesal}\n"
+                f"• **Monto en Contingencia:** ${litigio.monto_contingencia:,.2f} MXN\n"
+                f"• **Probabilidad de Éxito:** {litigio.probabilidad_exito or 'No definida'}"
+            )
+        }
+
+    # 8. RESPUESTA POR DEFECTO INTELIGENTE (No romper la inmersión)
+    return {
+        "respuesta": (
+            "🤔 No logré identificar una consulta de mi especialidad en el texto. "
+            "¿Te gustaría que analice alguna de las siguientes opciones para este caso?\n\n"
+            "💬 Intenta preguntarme:\n"
+            "• *'Dame una recomendación sobre el juicio'*\n"
+            "• *'¿Qué riesgo financiero representa?'*\n"
+            "• *'¿Cuánto tiempo tardará en resolverse?'*\n"
+            "• *'¿Qué sigue en este proceso?'*"
+        )
+    }
