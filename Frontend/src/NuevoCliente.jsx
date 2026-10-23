@@ -40,7 +40,7 @@ function NuevoCliente() {
       const token = localStorage.getItem('token');
       
       // Usamos la ruta /clientes/ de tu backend en Render
-      await api.post('/clientes/', datosLimpios, {
+      await api.post('/clientes', datosLimpios, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

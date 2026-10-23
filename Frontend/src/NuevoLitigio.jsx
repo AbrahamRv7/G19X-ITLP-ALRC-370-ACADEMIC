@@ -60,7 +60,7 @@ function NuevoLitigio() {
     try {
       const token = localStorage.getItem('token');
       // Enviamos la petición POST
-      await api.post('/litigios/', datosLimpios, {
+      await api.post('/litigios', datosLimpios, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

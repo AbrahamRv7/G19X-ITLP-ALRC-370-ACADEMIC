@@ -63,7 +63,7 @@ function NuevoContrato() {
 
     try {
       const token = localStorage.getItem('token');
-      await api.post('/contratos/', payload, {
+      await api.post('/contratos', payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
