@@ -9,7 +9,7 @@ from security import get_current_user, require_admin
 router = APIRouter(prefix="/contratos", tags=["4. Contratos"])
 
 
-@router.post("/contratos", response_model=schemas.ContratoResponse, tags=["4. Contratos"])
+@router.post("/", response_model=schemas.ContratoResponse, tags=["4. Contratos"])
 def crear_contrato(
     contrato: schemas.ContratoCreate,
     db: Session = Depends(database.get_db),
