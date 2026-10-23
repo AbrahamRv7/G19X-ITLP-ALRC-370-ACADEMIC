@@ -46,9 +46,9 @@ def actualizar_fase_litigio(
     current_user: models.Usuario = Depends(get_current_user),
 ):
     litigio = db.query(models.Litigio).filter(models.Litigio.id == litigio_id).first()
-    if not litigio:
-        raise HTTPException(status_code=404, detail="Litigio no encontrado")
-
+    # 🛡️ Validación RBAC: Bloquear a visores en edición
+    if current_user.rol == models.RolUsuario.viewer:
+        raise HTTPException(status_code=403, detail="Acceso denegado. Los usuarios de solo lectura no pueden actualizar fases.")
     fase_anterior = litigio.fase_procesal
     litigio.fase_procesal = datos.fase_procesal
     
