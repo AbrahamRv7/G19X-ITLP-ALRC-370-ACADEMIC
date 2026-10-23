@@ -29,8 +29,8 @@ def crear_contrato(
         return nuevo_contrato
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"Error al crear el contrato: {str(e)}")
-
+        print(f"Error interno: {e}") 
+        raise HTTPException(status_code=400, detail="Error al crear el contrato. Verifique los datos.")
 
 @router.get("")
 def obtener_contratos(

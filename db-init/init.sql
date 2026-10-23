@@ -20,10 +20,6 @@ DO $$ BEGIN
     CREATE TYPE nivelprobabilidad AS ENUM ('Alta', 'Media', 'Baja');
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-DO $$ BEGIN
-    CREATE TYPE estadoexpediente AS ENUM ('Abierto', 'En Proceso', 'Mediación', 'Sentencia', 'Cerrado');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
 -- 2. Tabla de Usuarios (Control de acceso basado en roles RBAC)
 CREATE TABLE IF NOT EXISTS usuarios (
     id SERIAL PRIMARY KEY,
@@ -90,15 +86,3 @@ CREATE TABLE IF NOT EXISTS historial_litigios (
     fecha_cambio TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 7. Tabla de Expedientes Generales
-CREATE TABLE IF NOT EXISTS expedientes (
-    id SERIAL PRIMARY KEY,
-    numero_expediente VARCHAR(50) UNIQUE NOT NULL,
-    titulo VARCHAR(200) NOT NULL,
-    descripcion TEXT,
-    estado estadoexpediente DEFAULT 'Abierto',
-    cliente_id INTEGER NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
-    abogado_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT,
-    creado_en TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    actualizado_en TIMESTAMPTZ
-);

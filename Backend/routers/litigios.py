@@ -65,7 +65,8 @@ def actualizar_fase_litigio(
         litigio_id=litigio.id,
         fase_anterior=fase_anterior,
         fase_nueva=datos.fase_procesal,
-        comentarios=datos.comentarios
+        comentarios=datos.comentarios,
+        usuario_modificador_id=current_user.id
     )
     db.add(nuevo_historial)
     db.commit()
@@ -199,15 +200,14 @@ def chat_litigio(
             )
         }
 
-    # 5. TIEMPO / PLAZOS / CUANDO / CUÁNTO
+   # 5. TIEMPO / PLAZOS / CUANDO / CUÁNTO
     elif any(palabra in texto for palabra in ["tiempo", "plazo", "cuando", "cuanto", "duracion", "fase"]):
-        # Tiempos estimados estándar en México por materia
         dias_estimados = "60 a 90 días" if litigio.materia.lower() == "laboral" else "90 a 120 días" if litigio.materia.lower() == "civil" else "45 a 90 días"
         return {
             "respuesta": (
                 f"⏱️ **Estimaciones de Tiempo (Fase: {litigio.fase_procesal}):**\n\n"
-                f"• Según nuestro historial, un litigio **{litigio.materia}** en esta etapa procesal suele requerir un promedio de **{dias_estimados}** hábiles para avanzar a la siguiente fase.\n"
-                f"• **Recomendación:** Monitorea de cerca la bitácora procesal en PluriOne para detectar si el caso excede este periodo promedio sin actividad judicial."
+                f"• Como estimación de referencia basada en la ley, un litigio **{litigio.materia}** en esta etapa suele requerir un promedio de **{dias_estimados}** hábiles para avanzar.\n"
+                f"• **Nota:** Para ver los tiempos reales exactos de tu despacho, consulta la gráfica de promedios en el Dashboard."
             )
         }
 

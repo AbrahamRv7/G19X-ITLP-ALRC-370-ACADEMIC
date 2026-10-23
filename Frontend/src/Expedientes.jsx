@@ -85,7 +85,7 @@ function Expedientes() {
           {expedientesFiltrados.length === 0 ? (
             <p style={{ textAlign: 'center', color: '#6c757d', padding: '20px' }}>No se encontraron expedientes con esa búsqueda.</p>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
               {expedientesFiltrados.map((exp) => (
                 <div key={exp.id} style={{ backgroundColor: '#fff', border: '1px solid #edf2f9', borderRadius: '8px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px', borderLeft: `5px solid ${getRiesgoStyle(exp.monto_contingencia).color}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

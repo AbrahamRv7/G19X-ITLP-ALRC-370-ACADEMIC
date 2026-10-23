@@ -119,21 +119,3 @@ class Cliente(Base):
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
 
     expedientes = relationship("Expediente", back_populates="cliente")
-
-class Expediente(Base):
-    __tablename__ = "expedientes"
-
-    id = Column(Integer, primary_key=True, index=True)
-    numero_expediente = Column(String(50), unique=True, index=True, nullable=False)
-    titulo = Column(String(200), nullable=False)
-    descripcion = Column(Text)
-    estado = Column(SQLEnum(EstadoExpediente), default=EstadoExpediente.abierto)
-    
-    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False)
-    abogado_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False) 
-
-    creado_en = Column(DateTime(timezone=True), server_default=func.now())
-    actualizado_en = Column(DateTime(timezone=True), onupdate=func.now())
-
-    cliente = relationship("Cliente", back_populates="expedientes")
-    abogado = relationship("Usuario", back_populates="expedientes")
