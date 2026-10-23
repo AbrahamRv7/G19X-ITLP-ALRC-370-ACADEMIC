@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 import database
 import models
+import schemas
 from schemas import ClienteResponse, ClienteCreate
 from security import get_current_user, require_admin
 
