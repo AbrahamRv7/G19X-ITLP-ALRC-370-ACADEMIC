@@ -198,7 +198,7 @@ function Dashboard() {
     setEscribiendoIA(true);
 
     try {
-      const respuesta = await api.get(`/litigios/${juicio.id}/analizar`);
+      const respuesta = await api.get(`/litigios${juicio.id}/analizar`);
       setChatMensajes(prev => [...prev, { rol: 'ai', texto: respuesta.data.analisis }]);
     } catch {
       setChatMensajes(prev => [...prev, { rol: 'ai', texto: '❌ Error de conexión con el servidor.' }]);
