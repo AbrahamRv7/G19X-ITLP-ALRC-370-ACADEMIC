@@ -70,8 +70,8 @@ function NuevoContrato() {
       toast.success('¡Contrato registrado y vinculado al cliente!');
       navigate('/dashboard');
     } catch (error) {
-      toast.error('Error al guardar el contrato. Verifica los datos.');
-      console.error(error);
+      toast.error(error.response?.data?.detail ||'Error al guardar el contrato. Verifica los datos.');
+      alert(mensajeError);
       setCargando(false);
     }
   };

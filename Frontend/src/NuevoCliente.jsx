@@ -47,7 +47,7 @@ function NuevoCliente() {
       toast.success('¡Cliente registrado exitosamente!');
       navigate('/dashboard'); // Regresa automático al panel
     } catch (error) {
-      toast.error('Error al guardar. Verifica que el Correo o RFC no estén duplicados.');
+      toast.error(error.response?.data?.detail || 'Error al guardar. Verifica que el Correo o RFC no estén duplicados.');
       console.error(error);
       setCargando(false);
     }

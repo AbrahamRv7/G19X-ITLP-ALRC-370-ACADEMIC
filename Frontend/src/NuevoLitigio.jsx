@@ -67,8 +67,8 @@ function NuevoLitigio() {
       toast.success('¡Litigio registrado exitosamente!');
       navigate('/dashboard');
     } catch (error) {
-      toast.error('Error al guardar el litigio. Verifica los datos.');
-      console.error(error);
+      const mensajeError = error.response?.data?.detail || "Error al registrar el litigio. Verifica los datos.";
+      toast.error(mensajeError);
       setCargando(false);
     }
   };
