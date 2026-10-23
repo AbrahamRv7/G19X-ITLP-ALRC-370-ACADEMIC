@@ -9,9 +9,9 @@ from security import get_current_user, require_admin
 
 router = APIRouter()
 
-@router.post("/clientes/", response_model=ClienteResponse, tags=["3. Clientes"])
+@router.post("/clientes/", response_model=schemas.ClienteResponse, tags=["3. Clientes"])
 def crear_cliente(
-    cliente: ClienteCreate,
+    cliente: schemas.ClienteCreate,
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user),
 ):

@@ -9,9 +9,9 @@ from security import get_current_user, require_admin
 
 router = APIRouter(prefix="/litigios", tags=["5. Litigios"])
 
-@router.post("/litigios/", response_model=LitigioResponse, tags=["5. Litigios"])
+@router.post("/litigios/", response_model=schemas.LitigioResponse, tags=["5. Litigios"])
 def crear_litigio(
-    litigio: LitigioCreate,
+    litigio: schemas.LitigioCreate,
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user),
 ):
