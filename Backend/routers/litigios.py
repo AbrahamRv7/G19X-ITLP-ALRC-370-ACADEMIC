@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -9,7 +10,7 @@ from security import get_current_user, require_admin
 
 router = APIRouter(prefix="/litigios", tags=["5. Litigios"])
 
-@router.post("/", response_model=schemas.LitigioResponse, tags=["5. Litigios"])
+@router.post("", response_model=schemas.LitigioResponse)
 def crear_litigio(
     litigio: schemas.LitigioCreate,
     db: Session = Depends(database.get_db),
@@ -30,7 +31,7 @@ def crear_litigio(
         print(f"Error interno al crear litigio: {e}")
         raise HTTPException(status_code=400, detail="Error al crear el litigio. ¿El número de expediente ya existe?")
     
-@router.get("")
+@router.get("", response_model=List[schemas.LitigioResponse])
 def obtener_litigios(
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user)
@@ -45,10 +46,14 @@ def actualizar_fase_litigio(
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user),
 ):
-    litigio = db.query(models.Litigio).filter(models.Litigio.id == litigio_id).first()
     # 🛡️ Validación RBAC: Bloquear a visores en edición
     if current_user.rol == models.RolUsuario.viewer:
         raise HTTPException(status_code=403, detail="Acceso denegado. Los usuarios de solo lectura no pueden actualizar fases.")
+
+    litigio = db.query(models.Litigio).filter(models.Litigio.id == litigio_id).first()
+    if not litigio:
+        raise HTTPException(status_code=404, detail="Litigio no encontrado")
+
     fase_anterior = litigio.fase_procesal
     litigio.fase_procesal = datos.fase_procesal
     
@@ -106,7 +111,8 @@ def analizar_litigio(
         analisis += "- En fase de desahogo."
         
     return {"analisis": analisis}
-# 5. Endpoint de Chat Interactivo (Motor de Reglas y Recomendaciones)
+
+# Endpoint de Chat Interactivo (Motor de Reglas y Recomendaciones)
 @router.post("/{litigio_id}/chat")
 def chat_litigio(
     litigio_id: int,
@@ -114,7 +120,6 @@ def chat_litigio(
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user),
 ):
-    # Intentamos obtener el litigio para dar respuestas personalizadas y contextuales
     litigio = db.query(models.Litigio).filter(models.Litigio.id == litigio_id).first()
     if not litigio:
         raise HTTPException(status_code=404, detail="Litigio no encontrado")
@@ -148,7 +153,6 @@ def chat_litigio(
     elif any(palabra in texto for palabra in ["recomen", "consejo", "que hago", "estrategia", "sugerencia"]):
         recomendaciones = []
         
-        # Regla por Probabilidad de Éxito
         if "baja" in (litigio.probabilidad_exito or "").lower():
             recomendaciones.append("🚨 **Alerta de viabilidad**: La probabilidad de éxito es BAJA. Se sugiere evaluar urgentemente una estrategia de negociación o un convenio fuera de juicio para mitigar pérdidas.")
         elif "media" in (litigio.probabilidad_exito or "").lower():
@@ -156,11 +160,9 @@ def chat_litigio(
         else:
             recomendaciones.append("✅ **Estrategia sólida**: La probabilidad de éxito es ALTA. Mantengan el rigor procesal para consolidar la resolución favorable.")
 
-        # Regla por Monto en Contingencia
         if litigio.monto_contingencia >= 1000000:
             recomendaciones.append(f"💸 **Impacto Financiero Crítico**: Al superar el millón de pesos (${litigio.monto_contingencia:,.2f}), se recomienda crear una provisión contable de contingencia para este caso.")
         
-        # Regla por Fase Procesal
         if "demanda" in litigio.fase_procesal.lower():
             recomendaciones.append("📂 **Acción en fase inicial**: Aseguren que el traslado y emplazamiento se hayan realizado con estricto apego a la ley para evitar vicios en el procedimiento.")
         elif "pruebas" in litigio.fase_procesal.lower() or "desahogo" in litigio.fase_procesal.lower():
@@ -168,7 +170,6 @@ def chat_litigio(
         elif "sentencia" in litigio.fase_procesal.lower() or "alegatos" in litigio.fase_procesal.lower():
             recomendaciones.append("⚖️ **Acción en fase resolutiva**: Se han cerrado las etapas de debate. Monitoreen el juzgado diariamente para reaccionar de inmediato a la notificación de la sentencia y preparar posibles recursos (amparo/apelación).")
 
-        # Regla por Materia
         if litigio.materia.lower() == "laboral":
             recomendaciones.append("👥 **Nota laboral**: Recuerda que en esta materia la carga de la prueba suele ser del patrón. Aseguren tener expedientes de personal completos.")
         elif litigio.materia.lower() == "mercantil":
@@ -237,7 +238,7 @@ def chat_litigio(
             )
         }
 
-    # 8. RESPUESTA POR DEFECTO INTELIGENTE (No romper la inmersión)
+    # 8. RESPUESTA POR DEFECTO INTELIGENTE
     return {
         "respuesta": (
             "🤔 No logré identificar una consulta de mi especialidad en el texto. "

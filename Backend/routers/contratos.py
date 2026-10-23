@@ -9,7 +9,7 @@ from security import get_current_user, require_admin
 router = APIRouter(prefix="/contratos", tags=["4. Contratos"])
 
 
-@router.post("/", response_model=schemas.ContratoResponse, tags=["4. Contratos"])
+@router.post("", response_model=schemas.ContratoResponse, tags=["4. Contratos"])
 def crear_contrato(
     contrato: schemas.ContratoCreate,
     db: Session = Depends(database.get_db),
@@ -29,7 +29,9 @@ def crear_contrato(
         db.rollback()
         print(f"Error interno al crear contrato: {e}")
         raise HTTPException(status_code=400, detail="Error al crear el contrato.")
-@router.get("")
+
+
+@router.get("", response_model=list[schemas.ContratoResponse])
 def obtener_contratos(
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user)
@@ -44,6 +46,10 @@ def actualizar_contrato(
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user),
 ):
+    # 🛡️ Validación RBAC: Bloquear a visores en edición
+    if current_user.rol == models.RolUsuario.viewer:
+        raise HTTPException(status_code=403, detail="Acceso denegado. Los usuarios de solo lectura no pueden actualizar contratos.")
+
     contrato = db.query(models.Contrato).filter(models.Contrato.id == contrato_id).first()
     if not contrato:
         raise HTTPException(status_code=404, detail="Contrato no encontrado")
@@ -66,6 +72,10 @@ def actualizar_estatus_contrato(
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user),
 ):
+    # 🛡️ Validación RBAC: Bloquear a visores en estatus
+    if current_user.rol == models.RolUsuario.viewer:
+        raise HTTPException(status_code=403, detail="Acceso denegado. Los usuarios de solo lectura no pueden modificar estatus.")
+
     contrato = db.query(models.Contrato).filter(models.Contrato.id == contrato_id).first()
     if not contrato:
         raise HTTPException(status_code=404, detail="Contrato no encontrado")
