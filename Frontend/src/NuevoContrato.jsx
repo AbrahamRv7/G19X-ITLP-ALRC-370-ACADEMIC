@@ -63,15 +63,15 @@ function NuevoContrato() {
 
     try {
       const token = localStorage.getItem('token');
-      await api.post('/contratos', payload, {
+      await api.post('/contratos/', payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       toast.success('¡Contrato registrado y vinculado al cliente!');
       navigate('/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.detail ||'Error al guardar el contrato. Verifica los datos.');
-      alert(mensajeError);
+      const mensajeError = error.response?.data?.detail || 'Error al guardar el contrato. Verifica los datos.';
+      toast.error(mensajeError);
       setCargando(false);
     }
   };
