@@ -31,7 +31,7 @@ def crear_litigio(
         print(f"Error interno al crear litigio: {e}")
         raise HTTPException(status_code=400, detail="Error al crear el litigio. ¿El número de expediente ya existe?")
     
-@router.get("", response_model=List[schemas.LitigioResponse])
+@router.get("")
 def obtener_litigios(
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user)
