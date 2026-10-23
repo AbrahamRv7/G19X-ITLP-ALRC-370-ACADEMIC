@@ -19,17 +19,19 @@ def crear_litigio(
     # 🛡️ Validación RBAC: Bloquear a visores
     if current_user.rol == models.RolUsuario.viewer:
         raise HTTPException(status_code=403, detail="Acceso denegado. Los usuarios de solo lectura no pueden crear litigios.")
-
-    nuevo_litigio = models.Litigio(**litigio.model_dump())
+    datos_litigio = litigio.model_dump()
+    if datos_litigio.get("materia"):
+        datos_litigio["materia"] = datos_litigio["materia"].capitalize()
+        
+    nuevo_litigio = models.Litigio(**datos_litigio)
     db.add(nuevo_litigio)
     try:
         db.commit()
         db.refresh(nuevo_litigio)
         return nuevo_litigio
-   # Reemplaza tu bloque except actual por este:
     except Exception as e:
         db.rollback()
-        # Esto enviará el error exacto al frontend para que lo leamos
+        # Puedes dejar el error real temporalmente o regresarlo al original
         raise HTTPException(status_code=400, detail=f"Error real: {str(e)}")
 @router.get("")
 def obtener_litigios(
