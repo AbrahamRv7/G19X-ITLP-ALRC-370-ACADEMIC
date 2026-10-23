@@ -46,8 +46,6 @@ class Usuario(Base):
     esta_activo = Column(Boolean, default=True)
     creado_en = Column(DateTime, server_default=func.now())
     actualizado_en = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-    expedientes = relationship("Expediente", back_populates="abogado")
     contratos = relationship("Contrato", back_populates="responsable")
     litigios = relationship("Litigio", back_populates="responsable")
 
@@ -118,4 +116,4 @@ class Cliente(Base):
     telefono = Column(String(20))
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
 
-    expedientes = relationship("Expediente", back_populates="cliente")
+   
