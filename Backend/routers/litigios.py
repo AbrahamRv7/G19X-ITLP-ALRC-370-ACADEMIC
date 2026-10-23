@@ -26,11 +26,11 @@ def crear_litigio(
         db.commit()
         db.refresh(nuevo_litigio)
         return nuevo_litigio
+   # Reemplaza tu bloque except actual por este:
     except Exception as e:
         db.rollback()
-        print(f"Error interno al crear litigio: {e}")
-        raise HTTPException(status_code=400, detail="Error al crear el litigio. ¿El número de expediente ya existe?")
-    
+        # Esto enviará el error exacto al frontend para que lo leamos
+        raise HTTPException(status_code=400, detail=f"Error real: {str(e)}")
 @router.get("")
 def obtener_litigios(
     db: Session = Depends(database.get_db),
