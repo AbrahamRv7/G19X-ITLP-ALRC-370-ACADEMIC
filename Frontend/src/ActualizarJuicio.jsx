@@ -34,12 +34,9 @@ function ActualizarJuicio() {
     try {
       const token = localStorage.getItem('token');
       
-      // Enviamos el historial al backend INCLUYENDO el ID del usuario
-      await api.post(`/litigios/${juicio.id}/historial`, {
-        fase_anterior: juicio.fase_procesal,
-        fase_nueva: nuevaFase,
-        comentarios: comentarios || "Sin comentarios adicionales.",
-        usuario_modificador_id: 1  // ID temporal por defecto
+      await api.put(`/litigios/${juicio.id}/fase`, {
+        fase_procesal: nuevaFase,
+        comentarios: comentarios || "Sin comentarios adicionales."
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });

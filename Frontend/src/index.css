@@ -1,3 +1,6 @@
+/* =========================================
+   1. RESETEO Y ESTILOS BASE GLOBALES
+   ========================================= */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -9,13 +12,115 @@ body, html {
   min-height: 100vh;
   font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background-color: #f4f7f6;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Esto elimina el margen que Vite le pone por defecto al proyecto */
 #root {
   width: 100%;
   max-width: 100% !important;
   margin: 0 auto;
   padding: 0 !important;
   text-align: left;
+}
+
+/* =========================================
+   2. DISEÑO RESPONSIVO PARA MÓVILES Y TABLETS
+   (Se activa cuando la pantalla es menor a 768px)
+   ========================================= */
+@media screen and (max-width: 768px) {
+  
+  /* 2.1 Forzamos apilamiento vertical de la estructura principal (Sidebar + Contenido) */
+  body > div, #root > div {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  /* 2.2 Ajuste del Sidebar (Menú de Navegación) para que se convierta en barra superior */
+  aside, nav, .sidebar, div[style*="width: 250px"] {
+    width: 100% !important;
+    min-height: auto !important;
+    padding: 15px !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  /* Los botones del Sidebar ahora se acomodan en horizontal o caen a la siguiente línea */
+  aside a, aside button, nav a, nav button, div[style*="width: 250px"] button {
+    margin-bottom: 5px !important;
+    font-size: 0.9rem !important;
+    padding: 8px 10px !important;
+    flex: 1 1 auto;
+    text-align: center !important;
+  }
+
+  /* Ocultamos textos no esenciales en el menú móvil para ahorrar espacio (opcional) */
+  div[style*="width: 250px"] h2 {
+    font-size: 1.2rem !important;
+    margin-bottom: 10px !important;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* 2.3 Formularios de Alta y Edición */
+  form, .form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  /* Los campos ocuparán el 100% de la pantalla del celular */
+  input, select, button, textarea {
+    width: 100% !important;
+    box-sizing: border-box;
+    font-size: 16px !important; /* Previene el auto-zoom en iPhone */
+  }
+
+  /* 2.4 Tableros, Tarjetas y Espaciados Generales */
+  /* Reducimos los márgenes gigantes que se ven bien en PC pero asfixian el celular */
+  div[style*="padding: 40px"] {
+    padding: 15px 10px !important;
+  }
+  
+  /* Reducimos el tamaño de los títulos principales */
+  h1 {
+    font-size: 1.6rem !important;
+    text-align: center !important;
+    margin-bottom: 15px !important;
+  }
+
+  /* Tarjetas de Dashboard (Contratos, Litigios, etc) ocupan el 100% del ancho */
+  div[style*="grid-template-columns"], 
+  div[style*="display: grid"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* 2.5 Tablas de Datos (Scroll Horizontal) */
+  /* Si tienes tablas html, les damos scroll lateral para que no deformen la pantalla */
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  th, td {
+    padding: 10px 8px !important;
+    font-size: 0.9rem !important;
+  }
+
+  /* 2.6 Gráficas Recharts */
+  /* Si los contenedores de las gráficas tienen altura fija, permitimos que se ajusten */
+  .recharts-wrapper {
+    width: 100% !important;
+  }
+  
+  /* Botón de "Regresar" o similar alineado correctamente */
+  button[style*="Regresar"] {
+    display: block;
+    margin: 0 auto 15px auto !important;
+  }
 }
