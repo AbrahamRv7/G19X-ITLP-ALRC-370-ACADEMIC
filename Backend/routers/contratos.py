@@ -9,19 +9,17 @@ from security import get_current_user, require_admin
 router = APIRouter(prefix="/contratos", tags=["4. Contratos"])
 
 
-@router.post("")
+@router.post("/contratos/", response_model=ContratoResponse, tags=["4. Contratos"])
 def crear_contrato(
-    contrato: schemas.ContratoCreate,
+    contrato: ContratoCreate,
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user),
 ):
-    datos = contrato.model_dump()
-    columnas_validas = {c.name for c in models.Contrato.__table__.columns}
-    datos_filtrados = {k: v for k, v in datos.items() if k in columnas_validas}
-    if not datos_filtrados.get("usuario_responsable_id"):
-        datos_filtrados["usuario_responsable_id"] = current_user.id
+    # 🛡️ Validación RBAC: Bloquear a visores
+    if current_user.rol == models.RolUsuario.viewer:
+        raise HTTPException(status_code=403, detail="Acceso denegado. Los usuarios de solo lectura no pueden crear contratos.")
 
-    nuevo_contrato = models.Contrato(**datos_filtrados)
+    nuevo_contrato = models.Contrato(**contrato.model_dump())
     db.add(nuevo_contrato)
     try:
         db.commit()
@@ -29,9 +27,8 @@ def crear_contrato(
         return nuevo_contrato
     except Exception as e:
         db.rollback()
-        print(f"Error interno: {e}") 
-        raise HTTPException(status_code=400, detail="Error al crear el contrato. Verifique los datos.")
-
+        print(f"Error interno al crear contrato: {e}")
+        raise HTTPException(status_code=400, detail="Error al crear el contrato.")
 @router.get("")
 def obtener_contratos(
     db: Session = Depends(database.get_db),

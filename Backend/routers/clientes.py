@@ -15,6 +15,10 @@ def crear_cliente(
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user),
 ):
+    # 🛡️ Control de Acceso Basado en Roles (RBAC)
+    if current_user.rol == models.RolUsuario.viewer:
+        raise HTTPException(status_code=403, detail="Acceso denegado. Los usuarios de solo lectura no pueden crear clientes.")
+
     nuevo_cliente = models.Cliente(**cliente.model_dump())
     db.add(nuevo_cliente)
     try:
@@ -25,7 +29,7 @@ def crear_cliente(
         db.rollback()
         print(f"Error interno al crear cliente: {e}")
         raise HTTPException(status_code=400, detail="Error al crear el cliente. Revisa si el RFC o correo ya existen.")
-
+    
 @router.get("/clientes/", response_model=List[ClienteResponse], tags=["3. Clientes"])
 def obtener_clientes(
     skip: int = 0,

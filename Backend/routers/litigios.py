@@ -9,36 +9,27 @@ from security import get_current_user, require_admin
 
 router = APIRouter(prefix="/litigios", tags=["5. Litigios"])
 
-@router.post("")
+@router.post("/litigios/", response_model=LitigioResponse, tags=["5. Litigios"])
 def crear_litigio(
-    litigio: schemas.LitigioCreate,
+    litigio: LitigioCreate,
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user),
 ):
-    datos = litigio.model_dump()
+    # 🛡️ Validación RBAC: Bloquear a visores
+    if current_user.rol == models.RolUsuario.viewer:
+        raise HTTPException(status_code=403, detail="Acceso denegado. Los usuarios de solo lectura no pueden crear litigios.")
 
-    if not datos.get("usuario_responsable_id"):
-        datos["usuario_responsable_id"] = current_user.id
-
-    if datos.get("materia"):
-        datos["materia"] = datos["materia"].capitalize()
-
-    if datos.get("probabilidad_exito"):
-        datos["probabilidad_exito"] = datos["probabilidad_exito"].capitalize()
-
+    nuevo_litigio = models.Litigio(**litigio.model_dump())
+    db.add(nuevo_litigio)
     try:
-        nuevo_litigio = models.Litigio(**datos)
-        db.add(nuevo_litigio)
         db.commit()
         db.refresh(nuevo_litigio)
         return nuevo_litigio
     except Exception as e:
         db.rollback()
-        print(f"Error real en BD: {e}")
-        raise HTTPException(
-            status_code=400,
-            detail="Error al crear el litigio. Verifique que el expediente no esté duplicado y los datos sean correctos."
-        )
+        print(f"Error interno al crear litigio: {e}")
+        raise HTTPException(status_code=400, detail="Error al crear el litigio. ¿El número de expediente ya existe?")
+    
 @router.get("")
 def obtener_litigios(
     db: Session = Depends(database.get_db),
