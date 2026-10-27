@@ -431,7 +431,7 @@ function Dashboard() {
                     <BarChart data={tiemposPorFase} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                       <XAxis type="number" unit=" d" />
-                      <YAxis dataKey="fase" type="category" width={95} style={{ fontSize: '0.8rem' }} />
+                      <YAxis dataKey="fase" type="category" width={160} interval={0} style={{ fontSize: '0.72rem' }} />
                       <Tooltip formatter={(val) => [`${val} días`, 'Promedio']} />
                       <Bar dataKey="dias_promedio" fill="#4f46e5" radius={[0, 6, 6, 0]} />
                     </BarChart>
