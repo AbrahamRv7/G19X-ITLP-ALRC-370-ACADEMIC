@@ -362,11 +362,11 @@ function Dashboard() {
                 <div style={{ fontSize: '2.5rem', opacity: 0.8 }}>📄</div>
               </div>
 
-              <div style={{ ...styles.kpiCard, borderLeftColor: '#eab308' }}>
+              {/* KPI DE ALERTA MODIFICADO: Color naranja oscuro para destacar */}
+              <div style={{ ...styles.kpiCard, borderLeftColor: '#ea580c' }}>
                 <div>
                   <h3 style={styles.kpiTitle}>Por Vencer (≤ 30 días)</h3>
-                  {/* Aquí conectamos la alerta local para máxima precisión */}
-                  <p style={{ ...styles.kpiNumber, color: '#b45309' }}>{cantidadPorVencer}</p>
+                  <p style={{ ...styles.kpiNumber, color: '#ea580c' }}>{cantidadPorVencer}</p>
                   <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Alerta preventiva</span>
                 </div>
                 <div style={{ fontSize: '2.5rem', opacity: 0.8 }}>⏳</div>
@@ -501,7 +501,25 @@ function Dashboard() {
                 />
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px' }}>
-                  {contratosFiltrados.length === 0 ? <p style={{ color: '#6c757d' }}>No se encontraron contratos.</p> : contratosFiltrados.map((c) => (
+                  {contratosFiltrados.length === 0 ? (
+                    <p style={{ color: '#6c757d' }}>No se encontraron contratos.</p>
+                  ) : contratosFiltrados.map((c) => {
+                    
+                    // --- LÓGICA DE ALERTAS INYECTADA AQUÍ ---
+                    let estaVencido = c.estatus === 'Vencido';
+                    let porVencer = false;
+
+                    if (c.fecha_vencimiento && c.estatus !== 'Terminado') {
+                      const hoy = new Date();
+                      hoy.setHours(0, 0, 0, 0);
+                      const vencimiento = new Date(`${c.fecha_vencimiento.split('T')[0]}T00:00:00`);
+                      const diasRestantes = Math.ceil((vencimiento - hoy) / (1000 * 60 * 60 * 24));
+                      
+                      if (diasRestantes < 0) estaVencido = true;
+                      if (diasRestantes >= 0 && diasRestantes <= 30) porVencer = true;
+                    }
+
+                    return (
                     <div key={c.id} style={{ ...styles.itemCard, borderLeft: `4px solid ${getEstatusStyle(c.estatus).color}` }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h4 style={{ margin: 0, textTransform: 'capitalize', color: '#2b3445', fontSize: '1.05rem' }}>
@@ -534,8 +552,24 @@ function Dashboard() {
                       </p>
                       
                       {c.fecha_vencimiento && (
-                        <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: c.estatus === 'Vencido' ? '#dc3545' : '#6c757d' }}>
+                        <p style={{ 
+                          margin: '2px 0 0 0', 
+                          fontSize: '0.85rem', 
+                          color: estaVencido ? '#dc3545' : (porVencer ? '#ea580c' : '#6c757d'),
+                          fontWeight: (estaVencido || porVencer) ? 'bold' : 'normal',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}>
+                          {estaVencido && '⚠️ '}
+                          {porVencer && '⏳ '}
                           Vence el: {c.fecha_vencimiento.split('T')[0]}
+                          
+                          {porVencer && (
+                            <span style={{ fontSize: '0.75rem', backgroundColor: '#ffedd5', color: '#c2410c', padding: '2px 6px', borderRadius: '4px', marginLeft: '5px' }}>
+                              ¡Próximo a vencer!
+                            </span>
+                          )}
                         </p>
                       )}
 
@@ -560,7 +594,7 @@ function Dashboard() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
 
