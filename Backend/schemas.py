@@ -77,6 +77,7 @@ class ContratoCreate(BaseModel):
 
 class ContratoResponse(ContratoCreate):
     id: int
+    cliente_id: Optional[int] = None
     creado_en: datetime
     model_config = {"from_attributes": True}
 
@@ -100,6 +101,9 @@ class LitigioCreate(BaseModel):
 
 class LitigioResponse(LitigioCreate):
     id: int
+    cliente_id: Optional[int] = None
+    materia: str
+    probabilidad_exito: Optional[str] = None
     usuario_responsable_id: Optional[int] = None 
     creado_en: datetime
     model_config = {"from_attributes": True}
@@ -107,11 +111,6 @@ class LitigioResponse(LitigioCreate):
 # ==========================================
 # 4. ESQUEMAS DE HISTORIAL DE LITIGIOS
 # ==========================================
-
-class HistorialLitigioCreate(BaseModel):
-    fase_nueva: str = Field(..., title="Nueva Fase Procesal")
-    comentarios: Optional[str] = Field(None, title="Comentarios / Justificación")
-    usuario_modificador_id: int = Field(..., title="ID de quien modifica")
 
 class HistorialLitigioResponse(BaseModel):
     id: int
@@ -122,10 +121,6 @@ class HistorialLitigioResponse(BaseModel):
     comentarios: Optional[str]
     fecha_cambio: datetime
     model_config = {"from_attributes": True}
-
-class ActualizarFase(BaseModel):
-    nueva_fase: str
-    comentarios: Optional[str] = None
 
 # ==========================================
 # 5. ESQUEMAS DE CLIENTES Y EXPEDIENTES
@@ -146,20 +141,3 @@ class ClienteResponse(ClienteBase):
     
     model_config = {"from_attributes": True}
 
-class ExpedienteBase(BaseModel):
-    numero_expediente: str
-    titulo: str
-    descripcion: Optional[str] = None
-    estado: str = "Abierto"
-    cliente_id: int
-    abogado_id: int
-
-class ExpedienteCreate(ExpedienteBase):
-    pass
-
-class ExpedienteResponse(ExpedienteBase):
-    id: int
-    creado_en: datetime
-    actualizado_en: Optional[datetime] = None
-    
-    model_config = {"from_attributes": True}

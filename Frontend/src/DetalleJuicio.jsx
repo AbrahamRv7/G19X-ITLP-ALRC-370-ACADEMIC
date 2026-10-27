@@ -20,7 +20,7 @@ function DetalleJuicio() {
 
     // 1. Obtener el nombre del cliente asociado
     if (juicio.cliente_id) {
-      api.get('/clientes/', { headers })
+      api.get('/clientes', { headers })
         .then(res => {
           const clienteEncontrado = res.data.find(c => c.id === juicio.cliente_id);
           setNombreCliente(clienteEncontrado ? clienteEncontrado.nombre_completo : 'Cliente Desconocido');

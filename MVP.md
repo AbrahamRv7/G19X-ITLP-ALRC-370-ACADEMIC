@@ -5,34 +5,34 @@
 
 El MVP de PluriOne LegalOps entregado incluye los siguientes módulos y funcionalidades, los cuales se encuentran completamente operativos y cumplen con los requerimientos iniciales del proyecto:
 
-*   **Gestión de Clientes (CRM Legal):**
+-   **Gestión de Clientes (CRM Legal):**
     *   Creación, lectura, actualización y eliminación (CRUD) de clientes.
     *   Vista detallada del cliente (Ficha 360°) que consolida su información, contratos y litigios asociados.
-*   **Gestión de Contratos:**
+-   **Gestión de Contratos:**
     *   CRUD de contratos.
     *   Asignación de contratos a clientes específicos.
     *   Seguimiento del estatus del contrato (Borrador, En Revisión, Activo, Vencido, Terminado).
     *   Alertas automáticas de caducidad en el dashboard basadas en la fecha de vencimiento (≤ 30 días).
-*   **Control de Litigios:**
+-   **Control de Litigios:**
     *   CRUD de litigios (expedientes judiciales).
     *   Vinculación de litigios con clientes.
     *   Registro del riesgo económico (contingencia) y materia legal.
-*   **Historial y Bitácora Procesal:**
+-   **Historial y Bitácora Procesal:**
     *   Registro inmutable de los cambios de fase en los litigios.
     *   Visualización de la línea de tiempo procesal en la vista de detalle del juicio.
-*   **Panel de Indicadores Jurídicos (Dashboard):**
+-   **Panel de Indicadores Jurídicos (Dashboard):**
     *   Visualización en tiempo real de métricas calculadas por el backend.
     *   Indicadores clave (KPIs): Contratos Activos, Contratos por Vencer (alerta preventiva calculada localmente), Litigios Activos y Riesgo Económico Total.
     *   Gráficas analíticas: Juicios por Materia (Gráfica de Pastel) y Estatus de Contratos (Gráfica de Barras).
     *   Métricas avanzadas: Duración Promedio por Fase Procesal, Exposición Financiera por Probabilidad y Carga de Trabajo por Abogado.
     *   Listados operativos de últimos contratos y litigios con filtros de búsqueda.
     *   Exportación de datos a formato CSV.
-*   **Seguridad y Autenticación:**
+-   **Seguridad y Autenticación:**
     *   Sistema de login utilizando JSON Web Tokens (JWT).
     *   Contraseñas encriptadas mediante Bcrypt.
     *   Control de acceso basado en roles (RBAC): Sólo los administradores pueden crear nuevos usuarios y eliminar registros (contratos/litigios).
     *   Rutas del backend protegidas, requiriendo un token válido.
-*   **Asistente Jurídico (Motor de Reglas):**
+-   **Asistente Jurídico (Motor de Reglas):**
     *   Módulo integrado en el dashboard para analizar expedientes.
     *   Funcionamiento basado en un motor de reglas procesales estructuradas en el backend, respondiendo a consultas específicas mediante lógica predefinida.
 
@@ -40,10 +40,10 @@ El MVP de PluriOne LegalOps entregado incluye los siguientes módulos y funciona
 
 Las siguientes características fueron consideradas en etapas iniciales o mencionadas en la documentación, pero no forman parte del MVP entregado y se plantean para futuras iteraciones:
 
-*   **Integración con Modelos de Lenguaje Grandes (LLMs):** El uso de servicios de inteligencia artificial externos, como Azure OpenAI, para el análisis de texto libre o generación de resúmenes legales no está implementado. El asistente actual opera exclusivamente con reglas locales.
-*   **Gestión de Expedientes Independientes:** Aunque la base de datos contempla la estructura para expedientes, la interfaz de usuario para gestionarlos como una entidad separada de los litigios no fue conectada, priorizando la vista unificada dentro del módulo de litigios.
-*   **Indicadores de Tendencia Temporal:** Gráficas que muestren la evolución histórica de métricas por mes o año (ej. nuevos contratos por mes) no están incluidas en esta versión.
-*   **Carga y Almacenamiento de Documentos:** La funcionalidad para adjuntar, almacenar y previsualizar archivos físicos (PDFs, imágenes) vinculados a contratos o litigios no forma parte del MVP.
+-   **Integración con Modelos de Lenguaje Grandes (LLMs):** El uso de servicios de inteligencia artificial externos, como Azure OpenAI, para el análisis de texto libre o generación de resúmenes legales no está implementado. El asistente actual opera exclusivamente con reglas locales.
+-   **Gestión de Expedientes Independientes:** Aunque la base de datos contempla la estructura para expedientes, la interfaz de usuario para gestionarlos como una entidad separada de los litigios no fue conectada, priorizando la vista unificada dentro del módulo de litigios.
+-   **Indicadores de Tendencia Temporal:** Gráficas que muestren la evolución histórica de métricas por mes o año (ej. nuevos contratos por mes) no están incluidas en esta versión.
+-   **Carga y Almacenamiento de Documentos:** La funcionalidad para adjuntar, almacenar y previsualizar archivos físicos (PDFs, imágenes) vinculados a contratos o litigios no forma parte del MVP.
 
 ### 3. Guía de Pruebas (Test Cases)
 
@@ -61,7 +61,7 @@ A continuación, se describen los pasos para validar las historias de usuario pr
 #### Prueba 2: Ciclo de Vida de un Contrato y Alertas
 1.  **Objetivo:** Validar la creación, edición y el cálculo de la alerta de vencimiento de contratos.
 2.  **Pasos:**
-    *   En el Dashboard, navegue a "Nuevo Contrato" (o botón equivalente si se implementó acceso directo, de lo contrario, use la API/Swagger temporalmente si la pantalla de creación no está enlazada en el menú principal).
+    *   En el menú de navegación de la plataforma, haga clic en el botón "Nuevo Contrato".
     *   Cree un contrato, asegurándose de establecer la "Fecha de Vencimiento" para una fecha que se encuentre dentro de los próximos 15 días a partir de la fecha actual. Defina un estatus inicial (ej. "Activo").
     *   Regrese al Dashboard. Verifique que la tarjeta de KPI "Por Vencer (≤ 30 días)" haya incrementado su valor en 1.
     *   Localice el contrato en el listado, haga clic en "✏️ Editar". Modifique el monto de la operación y cambie la fecha de vencimiento para el próximo año. Guarde los cambios.

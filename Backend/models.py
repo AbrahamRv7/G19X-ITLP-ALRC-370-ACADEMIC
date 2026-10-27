@@ -1,8 +1,8 @@
 import enum
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, ForeignKey, Enum as SQLEnum, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
-from database import Base
 from sqlalchemy.sql import func
+from database import Base
 
 class RolUsuario(str, enum.Enum):
     admin = 'admin'
@@ -28,13 +28,6 @@ class NivelProbabilidad(str, enum.Enum):
     media = 'Media'
     baja = 'Baja'
 
-class EstadoExpediente(str, enum.Enum):
-    abierto = "Abierto"
-    en_proceso = "En Proceso"
-    mediacion = "Mediación"
-    sentencia = "Sentencia"
-    cerrado = "Cerrado"
-
 class Usuario(Base):
     __tablename__ = "usuarios"
 
@@ -46,6 +39,7 @@ class Usuario(Base):
     esta_activo = Column(Boolean, default=True)
     creado_en = Column(DateTime, server_default=func.now())
     actualizado_en = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    
     contratos = relationship("Contrato", back_populates="responsable")
     litigios = relationship("Litigio", back_populates="responsable")
 
@@ -54,7 +48,7 @@ class Contrato(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     usuario_responsable_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"))
-    cliente_id = Column(Integer, ForeignKey("clientes.id", ondelete="SET NULL"), nullable=True) # <-- NUEVA RELACIÓN
+    cliente_id = Column(Integer, ForeignKey("clientes.id", ondelete="SET NULL"), nullable=True)
     
     tipo_contrato = Column(String(100), nullable=False)
     contraparte = Column(String(150), nullable=False)
@@ -69,6 +63,7 @@ class Contrato(Base):
 
     responsable = relationship("Usuario", back_populates="contratos")
     cliente = relationship("Cliente") 
+
 class Litigio(Base):
     __tablename__ = "litigios"
 
@@ -77,8 +72,8 @@ class Litigio(Base):
     cliente_id = Column(Integer, ForeignKey("clientes.id", ondelete="SET NULL"), nullable=True) 
 
     expediente = Column(String(50), unique=True, nullable=False)
-    contraparte = Column(String(150), nullable=True) # <-- NUEVA COLUMNA
-    juzgado = Column(String(150), nullable=True)     # <-- NUEVA COLUMNA
+    contraparte = Column(String(150), nullable=True)
+    juzgado = Column(String(150), nullable=True)
     
     materia = Column(SQLEnum(MateriaLitigio, values_callable=lambda obj: [e.value for e in obj]), nullable=False)
     fase_procesal = Column(String(100), nullable=False)
@@ -115,5 +110,3 @@ class Cliente(Base):
     correo = Column(String(100), unique=True, index=True)
     telefono = Column(String(20))
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
-
-   

@@ -17,7 +17,7 @@ function Expedientes() {
         // Pedimos los litigios (que contienen el campo expediente) y los clientes
         const [resLitigios, resClientes] = await Promise.all([
           api.get('/litigios'),
-          api.get('/clientes/')
+          api.get('/clientes')
         ]);
         setExpedientes(resLitigios.data);
         setClientes(resClientes.data);

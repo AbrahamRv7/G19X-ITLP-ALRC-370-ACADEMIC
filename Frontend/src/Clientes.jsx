@@ -25,7 +25,7 @@ function Clientes() {
       try {
         const headers = { Authorization: `Bearer ${token}` };
         const [resClientes, resLitigios, resContratos] = await Promise.allSettled([
-          api.get('/clientes/', { headers }),
+          api.get('/clientes', { headers }),
           api.get('/litigios', { headers }),
           api.get('/contratos', { headers })
         ]);
@@ -48,7 +48,7 @@ function Clientes() {
     if (!clienteAEliminar) return;
     try {
       const token = localStorage.getItem('token');
-      await api.delete(`/clientes/${clienteAEliminar.id}`, {
+      await api.delete(`/clientes${clienteAEliminar.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setClientes(clientes.filter(c => c.id !== clienteAEliminar.id));

@@ -31,7 +31,7 @@ function EditarContrato() {
     const cargarDatos = async () => {
       try {
         const [resClientes, resContratos] = await Promise.all([
-          api.get('/clientes/'),
+          api.get('/clientes'),
           contratoInicial ? Promise.resolve({ data: [] }) : api.get('/contratos')
         ]);
         setClientes(resClientes.data);

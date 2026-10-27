@@ -25,7 +25,7 @@ function DetalleCliente() {
       const clienteIdNum = parseInt(id, 10);
 
       const [resClientes, resContratos, resLitigios] = await Promise.allSettled([
-        api.get('/clientes/', { headers }),
+        api.get('/clientes', { headers }),
         api.get('/contratos', { headers }),
         api.get('/litigios', { headers })
       ]);

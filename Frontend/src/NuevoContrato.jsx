@@ -24,7 +24,7 @@ function NuevoContrato() {
     const obtenerClientes = async () => {
       try {
         const token = localStorage.getItem('token');
-        const respuesta = await api.get('/clientes/', {
+        const respuesta = await api.get('/clientes', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setClientes(respuesta.data);

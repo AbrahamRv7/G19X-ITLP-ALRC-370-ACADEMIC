@@ -71,8 +71,8 @@ function Dashboard() {
       resCarga
     ] = await Promise.allSettled([
       api.get('/contratos'),
-      api.get('/litigios'),
-      api.get('/clientes/'),
+      api.get('/litigios/'),
+      api.get('/clientes'),
       api.get('/dashboard/kpis'),
       api.get('/metricas/tiempo-promedio-fases'),
       api.get('/metricas/riesgo-financiero'),
@@ -198,7 +198,7 @@ function Dashboard() {
     setEscribiendoIA(true);
 
     try {
-      const respuesta = await api.get(`/litigios${juicio.id}/analizar`);
+      const respuesta = await api.get(`/litigios/${juicio.id}/analizar`);
       setChatMensajes(prev => [...prev, { rol: 'ai', texto: respuesta.data.analisis }]);
     } catch {
       setChatMensajes(prev => [...prev, { rol: 'ai', texto: '❌ Error de conexión con el servidor.' }]);
@@ -303,11 +303,9 @@ function Dashboard() {
     limite30Dias.setDate(hoy.getDate() + 30);
 
     return contratos.filter(c => {
-      // Ignoramos los que no tienen fecha o ya están cerrados/vencidos formalmente
-      if (!c.fecha_vencimiento || c.estatus === 'Terminado' || c.estatus === 'Vencido') return false;
+     if (!c.fecha_vencimiento || c.estatus === 'Terminado' || c.estatus === 'Vencido') return false;
       const fechaVencimiento = new Date(`${c.fecha_vencimiento.split('T')[0]}T00:00:00`);
-      // Validamos que la fecha caiga entre hoy y los próximos 30 días
-      return fechaVencimiento >= hoy && fechaVencimiento <= limite30Dias;
+     return fechaVencimiento >= hoy && fechaVencimiento <= limite30Dias;
     }).length;
   };
   

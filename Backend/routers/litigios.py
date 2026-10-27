@@ -31,16 +31,16 @@ def crear_litigio(
         return nuevo_litigio
     except Exception as e:
         db.rollback()
-        # Puedes dejar el error real temporalmente o regresarlo al original
-        raise HTTPException(status_code=400, detail=f"Error real: {str(e)}")
-@router.get("")
+        print(f"Error interno al crear litigio: {e}")
+        raise HTTPException(status_code=400, detail="Error al crear el litigio.")
+
+@router.get("", response_model=List[schemas.LitigioResponse])
 def obtener_litigios(
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user)
 ):
     return db.query(models.Litigio).all()
 
-# Se unificaron las rutas: PUT /fase ahora actualiza y crea el historial
 @router.put("/{litigio_id}/fase")
 def actualizar_fase_litigio(
     litigio_id: int,

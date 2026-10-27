@@ -28,7 +28,7 @@ function NuevoLitigio() {
   useEffect(() => {
     const obtenerClientes = async () => {
       try {
-        const respuesta = await api.get('/clientes/');
+        const respuesta = await api.get('/clientes');
         // Si usas Axios será respuesta.data, si es fetch podría requerir .json()
         setClientes(respuesta.data || respuesta); 
       } catch (error) {
