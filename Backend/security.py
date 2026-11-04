@@ -3,12 +3,13 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+from jwt.exceptions import PyJWTError as JWTError
+import bcrypt
 
 import database
 import models
+import jwt
 
 load_dotenv()
 
@@ -19,8 +20,28 @@ if not SECRET_KEY:
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+
+# --- COMPATIBILIDAD CON BCRYPT DIRECTO (Elimina errores de passlib) ---
+class NativeBcryptContext:
+    def verify(self, plain_password: str, hashed_password: str) -> bool:
+        try:
+            # Bcrypt tiene un límite estricto de 72 bytes en contraseñas
+            pwd_bytes = plain_password.encode('utf-8')[:72]
+            hash_bytes = hashed_password.encode('utf-8')
+            return bcrypt.checkpw(pwd_bytes, hash_bytes)
+        except Exception:
+            return False
+
+    def hash(self, password: str) -> str:
+        pwd_bytes = password.encode('utf-8')[:72]
+        hashed = bcrypt.hashpw(pwd_bytes, bcrypt.gensalt())
+        return hashed.decode('utf-8')
+
+
+# Instancia compatible que mantiene exactamente la misma interfaz (.verify y .hash)
+pwd_context = NativeBcryptContext()
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:

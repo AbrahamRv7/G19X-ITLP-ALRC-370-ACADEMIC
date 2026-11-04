@@ -48,7 +48,7 @@ function Clientes() {
     if (!clienteAEliminar) return;
     try {
       const token = localStorage.getItem('token');
-      await api.delete(`/clientes${clienteAEliminar.id}`, {
+      await api.delete(`/clientes/${clienteAEliminar.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setClientes(clientes.filter(c => c.id !== clienteAEliminar.id));

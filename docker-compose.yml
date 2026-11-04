@@ -1,19 +1,15 @@
-version: '3.8'
-
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:15
     container_name: legalops_postgres
-    restart: always
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: adminpassword
-      POSTGRES_DB: legalops_db
+      POSTGRES_PASSWORD: admin123  # <--- Debe ser exactamente la misma que en el .env
+      POSTGRES_DB: tu_base_de_datos     # <--- Debe coincidir con el nombre en tu URL
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db-init:/docker-entrypoint-initdb.d
-      
+
 volumes:
   postgres_data:

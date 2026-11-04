@@ -71,7 +71,7 @@ function Dashboard() {
       resCarga
     ] = await Promise.allSettled([
       api.get('/contratos'),
-      api.get('/litigios/'),
+      api.get('/litigios'),
       api.get('/clientes'),
       api.get('/dashboard/kpis'),
       api.get('/metricas/tiempo-promedio-fases'),
