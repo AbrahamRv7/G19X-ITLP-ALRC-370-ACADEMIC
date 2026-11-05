@@ -108,6 +108,7 @@ function Dashboard() {
 
   const cerrarSesion = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('rol');
     navigate('/');
   };
 
@@ -338,9 +339,11 @@ function Dashboard() {
           </div>
           
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={() => navigate('/registrar-usuario')} style={{ padding: '10px 20px', backgroundColor: '#0f766e', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
-              🛡️ Nuevo Usuario
-            </button>
+            {localStorage.getItem('rol') === 'admin' && (
+              <button onClick={() => navigate('/registrar-usuario')} style={{ padding: '10px 20px', backgroundColor: '#0f766e', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+                🛡️ Nuevo Usuario
+              </button>
+            )}
             <button onClick={cerrarSesion} style={{ padding: '10px 20px', backgroundColor: '#fff', color: '#dc3545', border: '1px solid #dc3545', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
               Cerrar Sesión
             </button>

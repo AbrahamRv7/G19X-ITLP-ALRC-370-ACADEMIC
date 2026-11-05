@@ -41,7 +41,7 @@ El MVP de PluriOne LegalOps entregado incluye los siguientes módulos y funciona
 Las siguientes características fueron consideradas en etapas iniciales o mencionadas en la documentación, pero no forman parte del MVP entregado y se plantean para futuras iteraciones:
 
 -   **Integración con Modelos de Lenguaje Grandes (LLMs):** El uso de servicios de inteligencia artificial externos, como Azure OpenAI, para el análisis de texto libre o generación de resúmenes legales no está implementado. El asistente actual opera exclusivamente con reglas locales.
--   **Gestión de Expedientes Independientes:** Aunque la base de datos contempla la estructura para expedientes, la interfaz de usuario para gestionarlos como una entidad separada de los litigios no fue conectada, priorizando la vista unificada dentro del módulo de litigios.
+- **Nota sobre expedientes:** Los expedientes se manejan de manera integrada como una vista directa dentro de los registros de litigios y contratos, por lo que el sistema no requiere una tabla independiente de base de datos dedicada exclusivamente a expedientes.Aunque la base de datos contempla la estructura para expedientes, la interfaz de usuario para gestionarlos como una entidad separada de los litigios no fue conectada, priorizando la vista unificada dentro del módulo de litigios.
 -   **Indicadores de Tendencia Temporal:** Gráficas que muestren la evolución histórica de métricas por mes o año (ej. nuevos contratos por mes) no están incluidas en esta versión.
 -   **Carga y Almacenamiento de Documentos:** La funcionalidad para adjuntar, almacenar y previsualizar archivos físicos (PDFs, imágenes) vinculados a contratos o litigios no forma parte del MVP.
 
@@ -49,14 +49,13 @@ Las siguientes características fueron consideradas en etapas iniciales o mencio
 
 A continuación, se describen los pasos para validar las historias de usuario principales definidas en el PRD:
 
-#### Prueba 1: Autenticación y Control de Roles
-1.  **Objetivo:** Verificar que el sistema distingue entre un Administrador y un Usuario normal.
-2.  **Pasos:**
-    *   Acceda a la URL del frontend y utilice las credenciales del Administrador Inicial (definidas en el archivo `.env`).
-    *   Navegue a la sección "🛡️ Nuevo Usuario" en el Dashboard. Cree un usuario de prueba con rol "Usuario".
-    *   Cierre sesión e inicie sesión con el nuevo usuario de prueba.
-    *   Intente acceder directamente a la URL de creación de usuario (`/registrar-usuario`). El sistema debe redirigir o bloquear el acceso.
-    *   En el listado de contratos o litigios, intente usar el botón "🗑️ Eliminar". El backend debe rechazar la operación devolviendo un error de permisos (403).
+### Prueba 1: Restricción de Acceso y Permisos por Rol
+1. Iniciar sesión como administrador (`admin_local@plurione.com`).
+2. Ir a la sección de registro y crear un usuario con el rol **"Solo Lectura (Viewer)"**.
+3. Cerrar sesión e iniciar sesión con las credenciales del nuevo usuario de Solo Lectura.
+4. **Comprobación visual:** Verificar que en el Dashboard **no** aparece el botón de «🛡️ Nuevo Usuario».
+5. **Comprobación de ruta:** Intentar acceder directamente a la URL `/registrar-usuario` mediante la barra del navegador; el sistema debe redirigir automáticamente al usuario de regreso al `/dashboard`.
+6. **Comprobación de backend:** Intentar realizar una acción restringida (como crear un contrato o litigio), comprobando que el sistema emite un aviso de acceso denegado (código 403).
 
 #### Prueba 2: Ciclo de Vida de un Contrato y Alertas
 1.  **Objetivo:** Validar la creación, edición y el cálculo de la alerta de vencimiento de contratos.

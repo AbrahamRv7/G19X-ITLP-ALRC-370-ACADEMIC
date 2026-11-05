@@ -1,5 +1,5 @@
 # 📄 Documento de Requisitos del Producto (PRD)
-**Proyecto:** PluriOne LegalOps
+**Proyecto:** Desarrollo de una Plataforma de Métricas e Indicadores del Área Jurídica 
 **Autor:** Abraham Luis Rivera
 **Institución:** Instituto Tecnológico de La Piedad (TecNM) - Residencia Profesional
 **Versión:** 1.0 (MVP)

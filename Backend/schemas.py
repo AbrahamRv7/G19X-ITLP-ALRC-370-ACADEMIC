@@ -1,13 +1,14 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import date, datetime
+from models import RolUsuario, EstatusContrato, MateriaLitigio, NivelProbabilidad
 
 class LitigioFaseUpdate(BaseModel):
     fase_procesal: str
     comentarios: Optional[str] = "Cambio de fase registrado sin comentarios adicionales."
 
 class ContratoEstatusUpdate(BaseModel):
-    estatus: str
+    estatus: EstatusContrato = Field(..., title="Estatus Actualizado del Contrato")
 
 # ==========================================
 # 1. ESQUEMAS DE AUTENTICACIÓN Y USUARIOS
@@ -45,10 +46,10 @@ class UsuarioCreate(BaseModel):
         min_length=4,
         examples=["mi_contraseña_123"]
     )
-    rol: str = Field(
-        "abogado", 
+    rol: RolUsuario = Field(
+        RolUsuario.abogado, 
         title="Nivel de Permisos", 
-        description="Escribe exactamente 'admin', 'abogado' o 'viewer'.",
+        description="Selecciona el rol correspondiente ('admin', 'abogado' o 'viewer').",
         examples=["abogado"]
     )
 
@@ -72,12 +73,13 @@ class ContratoCreate(BaseModel):
     fecha_firma: date = Field(..., title="Fecha de Firma")
     fecha_vencimiento: date = Field(..., title="Fecha de Vencimiento")
     monto_operacion: float = Field(..., title="Monto de la Operación")
-    estatus: str = Field(..., title="Estatus Actual")
+    estatus: EstatusContrato = Field(..., title="Estatus Actual")
     usuario_responsable_id: Optional[int] = None
 
 class ContratoResponse(ContratoCreate):
     id: int
     cliente_id: Optional[int] = None
+    estatus: str  
     creado_en: datetime
     model_config = {"from_attributes": True}
 
@@ -88,15 +90,14 @@ class ContratoResponse(ContratoCreate):
 class LitigioCreate(BaseModel):
     expediente: str = Field(..., title="Número de Expediente", examples=["145/2026"])
     
-    # --- NUEVOS CAMPOS AÑADIDOS PARA CONECTAR CON EL FRONTEND Y CLIENTES ---
     cliente_id: int = Field(..., title="ID del Cliente Asociado", examples=[1])
     contraparte: Optional[str] = Field(None, title="Nombre de la contraparte")
     juzgado: Optional[str] = Field(None, title="Juzgado o Autoridad")
     
-    materia: str = Field(..., title="Materia Legal", examples=["Laboral"])
+    materia: MateriaLitigio = Field(..., title="Materia Legal", examples=["Laboral"])
     fase_procesal: str = Field(..., title="Fase del Juicio", examples=["Demanda Inicial"])
     monto_contingencia: float = Field(..., title="Monto en Riesgo", examples=[500000.00])
-    probabilidad_exito: str = Field(..., title="Probabilidad de Ganar", examples=["Alta"])
+    probabilidad_exito: NivelProbabilidad = Field(..., title="Probabilidad de Ganar", examples=["Alta"])
     usuario_responsable_id: int = Field(..., title="ID del Abogado Responsable", examples=[1])
 
 class LitigioResponse(LitigioCreate):
@@ -140,4 +141,3 @@ class ClienteResponse(ClienteBase):
     creado_en: datetime
     
     model_config = {"from_attributes": True}
-

@@ -30,8 +30,8 @@ function Login() {
         }
       });
 
-      // Guardamos el token y vamos al dashboard
       localStorage.setItem('token', response.data.access_token);
+      localStorage.setItem('rol', response.data.usuario.rol);
       navigate('/dashboard');
       
     } catch (error) {

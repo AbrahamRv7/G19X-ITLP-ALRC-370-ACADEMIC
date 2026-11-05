@@ -12,6 +12,13 @@ import ActualizarJuicio from './ActualizarJuicio';
 import DetalleJuicio from './DetalleJuicio';
 import DetalleCliente from './DetalleCliente';
 import RegistrarUsuario from './RegistrarUsuario';
+import { Navigate } from 'react-router-dom';
+
+function SoloAdmin({ children }) {
+  return localStorage.getItem('rol') === 'admin'
+    ? children
+    : <Navigate to='/dashboard' replace />;
+}
 
 function Layout({ children }) {
   const location = useLocation();
@@ -116,6 +123,7 @@ function App() {
           <Route path="/detalle-juicio/:id" element={<DetalleJuicio />} />
           <Route path="/detalle-cliente/:id" element={<DetalleCliente />} />
           <Route path="/registrar-usuario" element={<RegistrarUsuario />} />
+          <Route path='/registrar-usuario' element={<SoloAdmin><RegistrarUsuario /></SoloAdmin>} />
         </Routes>
       </Layout>
     </BrowserRouter>
