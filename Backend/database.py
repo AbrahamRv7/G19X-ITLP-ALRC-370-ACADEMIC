@@ -14,21 +14,21 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Limpiamos parámetros previos
+# Limpiamos el string base
 if "?" in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.split("?")[0]
 
 db_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
 
-# Configuramos los parámetros para que psycopg2 acepte la conexión SSL de Render sin exigir CA file local
+# Inyectamos el SSL directamente en el string de conexión (Forma nativa de psycopg2)
+if "render.com" in db_url:
+    db_url += "?sslmode=require"
+
+# Motor limpio sin connect_args
 engine = create_engine(
     db_url,
     pool_pre_ping=True,
-    pool_recycle=300,
-    connect_args={
-        "sslmode": "require",
-        "sslrootcert": None  # Evita que busque certificados locales que Render no provee en el contenedor web
-    }
+    pool_recycle=300
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
