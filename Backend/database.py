@@ -14,22 +14,25 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Aseguramos el prefijo para psycopg2
 db_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
 
-# Aseguramos que tenga el parámetro sslmode=require
-if "render.com" in db_url and "sslmode" not in db_url:
-    separator = "&" if "?" in db_url else "?"
-    db_url = f"{db_url}{separator}sslmode=require"
+# Limpiamos cualquier parámetro sslmode previo del string para controlarlo limpiamente
+if "?" in db_url:
+    base_url, query = db_url.split("?", 1)
+    # Quitamos sslmode anterior si existía
+    params = [p for p in query.split("&") if not p.startswith("sslmode=")]
+    params.append("sslmode=prefer") # Cambiamos a 'prefer' o 'require'
+    db_url = f"{base_url}?" + "&".join(params)
+else:
+    db_url = f"{db_url}?sslmode=prefer"
 
-# Motor optimizado para evitar desconexiones SSL en la nube
 engine = create_engine(
     db_url,
-    pool_pre_ping=True,      
-    pool_recycle=300,        
+    pool_pre_ping=True,
+    pool_recycle=300,
     connect_args={
-        "sslmode": "require",
-        "connect_timeout": 10 
+        "sslmode": "prefer",       # 'prefer' evita que se cierre si el certificado intermedio falla
+        "connect_timeout": 15
     }
 )
 
