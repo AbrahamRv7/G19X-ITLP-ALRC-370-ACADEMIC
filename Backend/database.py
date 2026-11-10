@@ -14,17 +14,15 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Limpiamos el string base
 if "?" in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.split("?")[0]
 
 db_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
 
-# Inyectamos el SSL directamente en el string de conexión (Forma nativa de psycopg2)
-if "render.com" in db_url:
+
+if "render.com" in db_url and "sslmode=require" not in db_url:
     db_url += "?sslmode=require"
 
-# Motor limpio sin connect_args
 engine = create_engine(
     db_url,
     pool_pre_ping=True,
