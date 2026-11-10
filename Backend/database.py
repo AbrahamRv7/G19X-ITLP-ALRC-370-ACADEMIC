@@ -14,16 +14,20 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Limpiamos parámetros previos de la URL
+# Limpiamos parámetros previos
 if "?" in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.split("?")[0]
 
 db_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
 
-# Configuramos los argumentos de conexión específicos para la nube de Render
+# Determinamos si estamos en producción (Render) o en local
 connect_args = {}
 if "render.com" in db_url:
+    # Render requiere SSL obligatorio
     connect_args["sslmode"] = "require"
+else:
+    # Entorno local (Docker / localhost) no usa SSL
+    connect_args = {}
 
 engine = create_engine(
     db_url,
