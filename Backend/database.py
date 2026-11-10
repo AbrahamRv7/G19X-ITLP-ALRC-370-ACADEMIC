@@ -14,25 +14,20 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+# Limpiamos cualquier parámetro de consulta previo (?sslmode=...) para evitar conflictos
+if "?" in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.split("?")[0]
+
 db_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
 
-# Limpiamos cualquier parámetro sslmode previo del string para controlarlo limpiamente
-if "?" in db_url:
-    base_url, query = db_url.split("?", 1)
-    # Quitamos sslmode anterior si existía
-    params = [p for p in query.split("&") if not p.startswith("sslmode=")]
-    params.append("sslmode=prefer") # Cambiamos a 'prefer' o 'require'
-    db_url = f"{base_url}?" + "&".join(params)
-else:
-    db_url = f"{db_url}?sslmode=prefer"
-
+# Motor robusto con connect_args limpio y tiempo de espera extendido para Render
 engine = create_engine(
     db_url,
     pool_pre_ping=True,
     pool_recycle=300,
     connect_args={
-        "sslmode": "prefer",       # 'prefer' evita que se cierre si el certificado intermedio falla
-        "connect_timeout": 15
+        "sslmode": "require",
+        "connect_timeout": 30  # Da tiempo a que la base de datos despierte en Render
     }
 )
 
