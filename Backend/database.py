@@ -14,20 +14,22 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Limpiamos parámetros previos para evitar duplicados
+# Limpiamos parámetros previos
 if "?" in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.split("?")[0]
 
 db_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
 
-# Si estamos en Render o usando una URL externa de Postgres, añadimos sslmode=require explícitamente
+# Aseguramos sslmode=require para la nube de Render
 if "render.com" in db_url and "sslmode=" not in db_url:
     db_url += "?sslmode=require"
 
+# Configuramos el motor con un reintento de conexión (pool_pre_ping)
 engine = create_engine(
     db_url,
     pool_pre_ping=True,
-    pool_recycle=300
+    pool_recycle=300,
+    connect_args={"connect_timeout": 10} # Da un margen de espera de 10 segundos ante microcortes de Render
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
