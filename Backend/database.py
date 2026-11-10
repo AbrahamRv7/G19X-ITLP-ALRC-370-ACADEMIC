@@ -14,13 +14,14 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+# Limpiamos parámetros previos para evitar duplicados
 if "?" in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.split("?")[0]
 
 db_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
 
-
-if "render.com" in db_url and "sslmode=require" not in db_url:
+# Si estamos en Render o usando una URL externa de Postgres, añadimos sslmode=require explícitamente
+if "render.com" in db_url and "sslmode=" not in db_url:
     db_url += "?sslmode=require"
 
 engine = create_engine(
