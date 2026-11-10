@@ -14,19 +14,21 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Limpiamos parámetros previos
+# Limpiamos parámetros previos de la URL
 if "?" in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.split("?")[0]
 
 db_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
 
-# Determinamos si estamos en producción (Render) o en local
+# Configuración de argumentos según el entorno detectado en la URL
 connect_args = {}
-if "render.com" in db_url:
-    # Render requiere SSL obligatorio
+
+if "render.com" in db_url or "ohio-postgres" in db_url:
+    # Render requiere SSL de forma estricta para conexiones externas
     connect_args["sslmode"] = "require"
+    connect_args["connect_timeout"] = 10
 else:
-    # Entorno local (Docker / localhost) no usa SSL
+    # Entorno local (Docker o localhost) sin SSL
     connect_args = {}
 
 engine = create_engine(
