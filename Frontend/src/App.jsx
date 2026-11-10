@@ -121,8 +121,7 @@ function App() {
           <Route path="/nuevo-litigio" element={<NuevoLitigio />} />
           <Route path="/actualizar-juicio/:id" element={<ActualizarJuicio />} />
           <Route path="/detalle-juicio/:id" element={<DetalleJuicio />} />
-          <Route path="/detalle-cliente/:id" element={<DetalleCliente />} />
-          <Route path="/registrar-usuario" element={<RegistrarUsuario />} />
+          <Route path="/detalle-cliente/:id" element={<DetalleCliente />}
           <Route path='/registrar-usuario' element={<SoloAdmin><RegistrarUsuario /></SoloAdmin>} />
         </Routes>
       </Layout>

@@ -41,7 +41,7 @@ El MVP de PluriOne LegalOps entregado incluye los siguientes módulos y funciona
 Las siguientes características fueron consideradas en etapas iniciales o mencionadas en la documentación, pero no forman parte del MVP entregado y se plantean para futuras iteraciones:
 
 -   **Integración con Modelos de Lenguaje Grandes (LLMs):** El uso de servicios de inteligencia artificial externos, como Azure OpenAI, para el análisis de texto libre o generación de resúmenes legales no está implementado. El asistente actual opera exclusivamente con reglas locales.
-- **Nota sobre expedientes:** Los expedientes se manejan de manera integrada como una vista directa dentro de los registros de litigios y contratos, por lo que el sistema no requiere una tabla independiente de base de datos dedicada exclusivamente a expedientes.Aunque la base de datos contempla la estructura para expedientes, la interfaz de usuario para gestionarlos como una entidad separada de los litigios no fue conectada, priorizando la vista unificada dentro del módulo de litigios.
+- **Nota sobre expedientes:** Los expedientes se manejan de manera integrada como una vista directa dentro de los registros de litigios y contratos, por lo que el sistema no requiere una tabla independiente de base de datos dedicada exclusivamente a expedientes.
 -   **Indicadores de Tendencia Temporal:** Gráficas que muestren la evolución histórica de métricas por mes o año (ej. nuevos contratos por mes) no están incluidas en esta versión.
 -   **Carga y Almacenamiento de Documentos:** La funcionalidad para adjuntar, almacenar y previsualizar archivos físicos (PDFs, imágenes) vinculados a contratos o litigios no forma parte del MVP.
 

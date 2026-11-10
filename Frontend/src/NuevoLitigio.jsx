@@ -140,7 +140,15 @@ function NuevoLitigio() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
               <div>
                 <label style={labelStyle}>Materia *</label>
-                <input type="text" name="materia" value={formData.materia} onChange={manejarCambio} placeholder="Ej. Laboral, Civil, Mercantil..." style={inputStyle} required />
+                <select name="materia" value={formData.materia} onChange={manejarCambio} style={{ ...inputStyle, cursor: 'pointer' }} required>
+                  <option value="">Seleccione una materia</option>
+                  <option value="Laboral">Laboral</option>
+                  <option value="Mercantil">Mercantil</option>
+                  <option value="Civil">Civil</option>
+                  <option value="Penal">Penal</option>
+                  <option value="Administrativo">Administrativo</option>
+                  <option value="Amparo">Amparo</option>
+                </select>
               </div>
               <div>
                 <label style={labelStyle}>Contraparte</label>
