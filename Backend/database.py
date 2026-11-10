@@ -14,20 +14,20 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Limpiamos cualquier parámetro de consulta previo (?sslmode=...) para evitar conflictos
+# Limpiamos cualquier parámetro previo de la URL para evitar conflictos
 if "?" in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.split("?")[0]
 
 db_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
 
-# Motor robusto con connect_args limpio y tiempo de espera extendido para Render
+# Configuramos el motor con sslmode=require y opciones para evitar el cierre abrupto
 engine = create_engine(
     db_url,
     pool_pre_ping=True,
     pool_recycle=300,
     connect_args={
         "sslmode": "require",
-        "connect_timeout": 30  # Da tiempo a que la base de datos despierte en Render
+        "options": "-c client_encoding=utf8"
     }
 )
 
