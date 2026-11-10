@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from './api';
 import toast from 'react-hot-toast';
+import { mensajeDeError } from './utils';
 
 function NuevoContrato() {
   const navigate = useNavigate();
@@ -70,8 +71,7 @@ function NuevoContrato() {
       toast.success('¡Contrato registrado y vinculado al cliente!');
       navigate('/dashboard');
     } catch (error) {
-      const mensajeError = error.response?.data?.detail || 'Error al guardar el contrato. Verifica los datos.';
-      toast.error(mensajeError);
+      toast.error(mensajeDeError(error, 'Error al guardar el contrato. Verifica los datos.'));
       setCargando(false);
     }
   };

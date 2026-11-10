@@ -1,5 +1,6 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 import database
@@ -33,8 +34,9 @@ def crear_cliente(
     
 @router.get("", response_model=List[ClienteResponse])
 def obtener_clientes(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    # El frontend carga el padrón completo en una sola petición, por eso el valor por defecto es amplio.
+    limit: int = Query(500, ge=1, le=1000),
     db: Session = Depends(database.get_db),
     current_user: models.Usuario = Depends(get_current_user),
 ):
@@ -59,7 +61,11 @@ def actualizar_cliente(
     for clave, valor in campos.items():
         setattr(cliente, clave, valor)
 
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="El RFC o el correo ya pertenece a otro cliente.")
     db.refresh(cliente)
     return cliente
 

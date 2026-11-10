@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from './api';
 import toast from 'react-hot-toast';
+import { mensajeDeError } from './utils';
 
 function NuevoLitigio() {
   const navigate = useNavigate();
@@ -18,9 +19,9 @@ function NuevoLitigio() {
     juzgado: '',
     fase_procesal: 'Presentación de Demanda',
     probabilidad_exito: 'Media',
-    monto_contingencia: '',
-    usuario_responsable_id: 1 
-  }); 
+    monto_contingencia: ''
+    // El responsable no se envía: el backend asigna al usuario que registra el litigio.
+  });
 
   const [cargando, setCargando] = useState(false);
 
@@ -55,7 +56,7 @@ function NuevoLitigio() {
     if (!datosLimpios.monto_contingencia) datosLimpios.monto_contingencia = 0; 
     
     // Convertimos el ID a número para que la base de datos lo acepte sin problemas
-    datosLimpios.cliente_id = parseInt(datosLimpios.cliente_id);
+    datosLimpios.cliente_id = parseInt(datosLimpios.cliente_id, 10);
 
     try {
       const token = localStorage.getItem('token');
@@ -67,8 +68,7 @@ function NuevoLitigio() {
       toast.success('¡Litigio registrado exitosamente!');
       navigate('/dashboard');
     } catch (error) {
-      const mensajeError = error.response?.data?.detail || "Error al registrar el litigio. Verifica los datos.";
-      toast.error(mensajeError);
+      toast.error(mensajeDeError(error, "Error al registrar el litigio. Verifica los datos."));
       setCargando(false);
     }
   };
@@ -145,9 +145,8 @@ function NuevoLitigio() {
                   <option value="Laboral">Laboral</option>
                   <option value="Mercantil">Mercantil</option>
                   <option value="Civil">Civil</option>
-                  <option value="Penal">Penal</option>
+                  <option value="Fiscal">Fiscal</option>
                   <option value="Administrativo">Administrativo</option>
-                  <option value="Amparo">Amparo</option>
                 </select>
               </div>
               <div>
@@ -180,7 +179,7 @@ function NuevoLitigio() {
               </div>
               <div>
                 <label style={labelStyle}>Monto en Contingencia ($)</label>
-                <input type="number" name="monto_contingencia" value={formData.monto_contingencia} onChange={manejarCambio} placeholder="0.00" style={inputStyle} />
+                <input type="number" min="0" step="0.01" name="monto_contingencia" value={formData.monto_contingencia} onChange={manejarCambio} placeholder="0.00" style={inputStyle} />
               </div>
             </div>
 

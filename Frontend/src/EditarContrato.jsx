@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import api from './api';
 import toast from 'react-hot-toast';
+import { mensajeDeError } from './utils';
 
 function EditarContrato() {
   const { id } = useParams();
@@ -24,7 +25,7 @@ function EditarContrato() {
     fecha_vencimiento: limpiarFecha(contratoInicial?.fecha_vencimiento),
     monto_operacion: contratoInicial?.monto_operacion ?? '',
     estatus: contratoInicial?.estatus || 'Activo',
-    usuario_responsable_id: contratoInicial?.usuario_responsable_id || 1 
+    usuario_responsable_id: contratoInicial?.usuario_responsable_id ?? ''
   });
 
   useEffect(() => {
@@ -48,7 +49,7 @@ function EditarContrato() {
               fecha_vencimiento: limpiarFecha(encontrado.fecha_vencimiento),
               monto_operacion: encontrado.monto_operacion ?? '',
               estatus: encontrado.estatus || 'Activo',
-              usuario_responsable_id: encontrado.usuario_responsable_id || 1
+              usuario_responsable_id: encontrado.usuario_responsable_id ?? ''
             });
           }
         }
@@ -78,7 +79,7 @@ function EditarContrato() {
       fecha_vencimiento: formData.fecha_vencimiento || null,
       monto_operacion: formData.monto_operacion === '' ? 0 : parseFloat(formData.monto_operacion),
       estatus: formData.estatus,
-      usuario_responsable_id: parseInt(formData.usuario_responsable_id, 10) 
+      usuario_responsable_id: formData.usuario_responsable_id === '' ? null : parseInt(formData.usuario_responsable_id, 10)
     };
 
     try {
@@ -86,7 +87,7 @@ function EditarContrato() {
       toast.success('Contrato actualizado correctamente');
       navigate('/dashboard');
     } catch (error) {
-      toast.error('Error al actualizar el contrato.');
+      toast.error(mensajeDeError(error, 'Error al actualizar el contrato.'));
       console.error("Fallo de Backend:", error.response?.data || error);
       setCargando(false);
     }

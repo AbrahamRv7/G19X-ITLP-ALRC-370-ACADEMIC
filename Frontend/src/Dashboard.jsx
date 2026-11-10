@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from './api';
 import toast from 'react-hot-toast';
+import { celdaCSV } from './utils';
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend, ResponsiveContainer
@@ -177,7 +178,7 @@ function Dashboard() {
 
     const contenidoCSV = [
       cabeceras.join(','),
-      ...filas.map(fila => fila.map(valor => `"${valor}"`).join(','))
+      ...filas.map(fila => fila.map(celdaCSV).join(','))
     ].join('\n');
 
     const blob = new Blob(['\uFEFF' + contenidoCSV], { type: 'text/csv;charset=utf-8;' });

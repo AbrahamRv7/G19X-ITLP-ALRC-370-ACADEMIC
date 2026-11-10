@@ -4,7 +4,6 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
-import bcrypt
 import database
 import models
 import schemas
@@ -41,7 +40,9 @@ def crear_usuario(
     db: Session = Depends(database.get_db),
     current_admin: models.Usuario = Depends(require_admin),
 ):
-    existe = db.query(models.Usuario).filter(models.Usuario.email == usuario.email).first()
+    # El esquema ya normaliza el correo a minúsculas; se compara sin distinguir mayúsculas
+    # para detectar también cuentas antiguas guardadas con mayúsculas.
+    existe = db.query(models.Usuario).filter(func.lower(models.Usuario.email) == usuario.email).first()
     if existe:
         raise HTTPException(status_code=400, detail="Este correo ya está registrado en el sistema")
 

@@ -162,7 +162,7 @@ El sistema crea un administrador con las credenciales de tu `.env`. Para generar
 
 ```bash
 
-python seed.py
+python seed.py   # ⚠️ solo en desarrollo local: crea usuarios con contraseña pública (Demo2026!)
 
 ```
 
@@ -182,7 +182,7 @@ python seed.py
 
 ## ✅ Pruebas Automáticas
 
-Este proyecto utiliza `pytest` y `httpx`. Asegúrate de tener tu entorno virtual activado y ejecuta desde `Backend/`:
+Este proyecto utiliza `pytest` y `httpx` (`pip install -r requirements-dev.txt`). Asegúrate de tener tu entorno virtual activado y ejecuta desde `Backend/`:
 
 ```bash
 
