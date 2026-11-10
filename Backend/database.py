@@ -13,7 +13,12 @@ if not DATABASE_URL:
 
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 db_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
+
+if "render.com" in db_url and "sslmode" not in db_url:
+    separator = "&" if "?" in db_url else "?"
+    db_url = f"{db_url}{separator}sslmode=require"
 
 engine = create_engine(
     db_url,
