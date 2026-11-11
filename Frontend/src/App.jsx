@@ -14,6 +14,13 @@ import DetalleCliente from './DetalleCliente';
 import RegistrarUsuario from './RegistrarUsuario';
 import { Navigate } from 'react-router-dom';
 
+// Sin sesión no se muestra ninguna pantalla interna (los datos igualmente los protege el backend).
+function RutaPrivada({ children }) {
+  return localStorage.getItem('token')
+    ? children
+    : <Navigate to='/' replace />;
+}
+
 function SoloAdmin({ children }) {
   return localStorage.getItem('rol') === 'admin'
     ? children
@@ -112,17 +119,18 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/clientes" element={<Clientes />} />
-          <Route path="/expedientes" element={<Expedientes />} />
-          <Route path="/nuevo-cliente" element={<NuevoCliente />} />
-          <Route path="/nuevo-contrato" element={<NuevoContrato />} />
-          <Route path="/editar-contrato/:id" element={<EditarContrato />} />
-          <Route path="/nuevo-litigio" element={<NuevoLitigio />} />
-          <Route path="/actualizar-juicio/:id" element={<ActualizarJuicio />} />
-          <Route path="/detalle-juicio/:id" element={<DetalleJuicio />} />
-          <Route path="/detalle-cliente/:id" element={<DetalleCliente />} />
-          <Route path='/registrar-usuario' element={<SoloAdmin><RegistrarUsuario /></SoloAdmin>} />
+          <Route path="/dashboard" element={<RutaPrivada><Dashboard /></RutaPrivada>} />
+          <Route path="/clientes" element={<RutaPrivada><Clientes /></RutaPrivada>} />
+          <Route path="/expedientes" element={<RutaPrivada><Expedientes /></RutaPrivada>} />
+          <Route path="/nuevo-cliente" element={<RutaPrivada><NuevoCliente /></RutaPrivada>} />
+          <Route path="/nuevo-contrato" element={<RutaPrivada><NuevoContrato /></RutaPrivada>} />
+          <Route path="/editar-contrato/:id" element={<RutaPrivada><EditarContrato /></RutaPrivada>} />
+          <Route path="/nuevo-litigio" element={<RutaPrivada><NuevoLitigio /></RutaPrivada>} />
+          <Route path="/actualizar-juicio/:id" element={<RutaPrivada><ActualizarJuicio /></RutaPrivada>} />
+          <Route path="/detalle-juicio/:id" element={<RutaPrivada><DetalleJuicio /></RutaPrivada>} />
+          <Route path="/detalle-cliente/:id" element={<RutaPrivada><DetalleCliente /></RutaPrivada>} />
+          <Route path='/registrar-usuario' element={<RutaPrivada><SoloAdmin><RegistrarUsuario /></SoloAdmin></RutaPrivada>} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Layout>
     </BrowserRouter>

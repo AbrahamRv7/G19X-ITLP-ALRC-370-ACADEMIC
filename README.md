@@ -60,7 +60,7 @@ El sistema opera bajo una arquitectura en la nube escalable y separada en tres c
 
 - **SQLAlchemy** (ORM) + **Pydantic** (Validación de esquemas)
 
-- **Passlib & Bcrypt** (Hashing de contraseñas)
+- **Bcrypt** (Hashing de contraseñas)
 
 - **PyJWT** (Autenticación basada en Tokens JSON Web)
 
@@ -89,7 +89,7 @@ El sistema opera bajo una arquitectura en la nube escalable y separada en tres c
 
 ## 🔐 Instalación y Despliegue Local
 
-Asegúrate de tener instalados **Node.js (18+)**, **Python (3.10+)** y **Docker / Docker Compose**.
+Asegúrate de tener instalados **Node.js (20.19+ o 22.12+)**, **Python (3.10+)** y **Docker / Docker Compose**.
 
 
 
@@ -105,16 +105,33 @@ cd G19X-ITLP-ALRC-370-ACADEMIC
 
 ### 2. Configurar Base de Datos y Variables de Entorno
 
-Copia el archivo `.env.example` en la carpeta `Backend` y renómbralo a `.env`. Asegúrate de que la contraseña en la `DATABASE_URL` coincida con el `docker-compose.yml`.
+Copia el archivo `.env.example` de la carpeta `Backend` y renómbralo a `.env`. La contraseña de la `DATABASE_URL` ya coincide con la de `docker-compose.yml`.
 
 ```bash
 
 cp Backend/.env.example Backend/.env
 
-docker-compose up -d
-> **Nota de limpieza:** Si necesitas reiniciar el entorno y empezar con una base de datos totalmente vacía desde cero, ejecuta el comando `docker-compose down -v` antes de volver a levantar los contenedores.
+```
+
+Abre `Backend/.env` y reemplaza el valor de `SECRET_KEY` por una clave propia (el ejemplo solo es un marcador). Puedes generarla con:
+
+```bash
+
+python -c "import secrets; print(secrets.token_hex(32))"
 
 ```
+
+Después levanta la base de datos (desde la raíz del proyecto):
+
+```bash
+
+docker-compose up -d
+
+```
+
+*Si tu Docker es reciente, el comando equivalente es `docker compose up -d`. La primera vez, el contenedor crea las tablas automáticamente con `db-init/init.sql`; espera unos segundos a que PostgreSQL termine de iniciar antes de arrancar el backend.*
+
+> **Nota de limpieza:** Si necesitas reiniciar el entorno y empezar con una base de datos totalmente vacía desde cero, ejecuta `docker-compose down -v` antes de volver a levantar los contenedores.
 
 ### 3. Configurar y Ejecutar el Backend
 
@@ -138,7 +155,7 @@ uvicorn main:app --reload --port 8000
 
 ### 4. Configurar y Ejecutar el Frontend
 
-En una nueva terminal:
+En una nueva terminal, parado en la raíz del proyecto:
 
 ```bash
 
@@ -162,7 +179,7 @@ El sistema crea un administrador con las credenciales de tu `.env`. Para generar
 
 ```bash
 
-python seed.py
+python seed.py   # ⚠️ solo en desarrollo local: crea usuarios con contraseña pública (Demo2026!)
 
 ```
 
@@ -182,7 +199,7 @@ python seed.py
 
 ## ✅ Pruebas Automáticas
 
-Este proyecto utiliza `pytest` y `httpx`. Asegúrate de tener tu entorno virtual activado y ejecuta desde `Backend/`:
+Este proyecto utiliza `pytest` y `httpx` (`pip install -r requirements-dev.txt`). Asegúrate de tener tu entorno virtual activado, la base de datos levantada (`docker-compose up -d`) y el archivo `Backend/.env` configurado (las pruebas usan al administrador inicial definido ahí). Ejecuta desde `Backend/`:
 
 ```bash
 

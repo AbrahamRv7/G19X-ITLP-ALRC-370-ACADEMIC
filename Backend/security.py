@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
@@ -16,6 +17,16 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise RuntimeError("ERROR CRÍTICO: La variable de entorno SECRET_KEY no está configurada.")
+
+logger = logging.getLogger(__name__)
+
+# Aviso (no bloquea el arranque) si la clave es corta o parece un valor de ejemplo del repositorio.
+_PREFIJOS_DE_EJEMPLO = ("tu_clave", "cambia_esta", "escribe_aqui", "reemplazar", "clave_secre")
+if len(SECRET_KEY) < 32 or SECRET_KEY.lower().startswith(_PREFIJOS_DE_EJEMPLO):
+    logger.warning(
+        "SECRET_KEY es corta o parece un valor de ejemplo. Genera una con: "
+        "python -c \"import secrets; print(secrets.token_hex(32))\""
+    )
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))

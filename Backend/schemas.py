@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import date, datetime
 from models import RolUsuario, EstatusContrato, MateriaLitigio, NivelProbabilidad
@@ -9,6 +9,9 @@ class LitigioFaseUpdate(BaseModel):
 
 class ContratoEstatusUpdate(BaseModel):
     estatus: EstatusContrato = Field(..., title="Estatus Actualizado del Contrato")
+
+class ChatConsulta(BaseModel):
+    texto: str = Field("", max_length=500, title="Texto de la consulta al asistente")
 
 # ==========================================
 # 1. ESQUEMAS DE AUTENTICACIÓN Y USUARIOS
@@ -42,8 +45,8 @@ class UsuarioCreate(BaseModel):
     password: str = Field(
         ..., 
         title="Contraseña de Acceso", 
-        description="Crea una contraseña segura (mínimo 4 caracteres).",
-        min_length=4,
+        description="Crea una contraseña segura (mínimo 8 caracteres).",
+        min_length=8,
         examples=["mi_contraseña_123"]
     )
     rol: RolUsuario = Field(
@@ -52,6 +55,23 @@ class UsuarioCreate(BaseModel):
         description="Selecciona el rol correspondiente ('admin', 'abogado' o 'viewer').",
         examples=["abogado"]
     )
+
+    @field_validator("email")
+    @classmethod
+    def normalizar_email(cls, valor: str) -> str:
+        # Se guarda siempre en minúsculas para que A@x.com y a@x.com no sean cuentas distintas
+        valor = valor.strip().lower()
+        if " " in valor or valor.count("@") != 1 or valor.startswith("@") or valor.endswith("@"):
+            raise ValueError("Correo electrónico no válido")
+        return valor
+
+    @field_validator("nombre")
+    @classmethod
+    def limpiar_nombre(cls, valor: str) -> str:
+        valor = valor.strip()
+        if not valor:
+            raise ValueError("El nombre no puede estar vacío")
+        return valor
 
 class UsuarioResponse(BaseModel):
     id: int
@@ -66,12 +86,14 @@ class UsuarioResponse(BaseModel):
 # ==========================================
 
 class ContratoCreate(BaseModel):
-    cliente_id: int = Field(..., title="ID del Cliente Asociado")
+    # cliente_id y fechas son opcionales: en la base de datos admiten NULL y los formularios
+    # permiten dejarlos vacíos (por ejemplo, un contrato cuyo cliente fue eliminado).
+    cliente_id: Optional[int] = Field(None, title="ID del Cliente Asociado")
     tipo_contrato: str = Field(..., title="Tipo de Contrato")
     contraparte: str = Field(..., title="Contraparte")
     departamento_solicitante: str = Field(..., title="Departamento Solicitante")
-    fecha_firma: date = Field(..., title="Fecha de Firma")
-    fecha_vencimiento: date = Field(..., title="Fecha de Vencimiento")
+    fecha_firma: Optional[date] = Field(None, title="Fecha de Firma")
+    fecha_vencimiento: Optional[date] = Field(None, title="Fecha de Vencimiento")
     monto_operacion: float = Field(..., title="Monto de la Operación")
     estatus: EstatusContrato = Field(..., title="Estatus Actual")
     usuario_responsable_id: Optional[int] = None
@@ -98,7 +120,8 @@ class LitigioCreate(BaseModel):
     fase_procesal: str = Field(..., title="Fase del Juicio", examples=["Demanda Inicial"])
     monto_contingencia: float = Field(..., title="Monto en Riesgo", examples=[500000.00])
     probabilidad_exito: NivelProbabilidad = Field(..., title="Probabilidad de Ganar", examples=["Alta"])
-    usuario_responsable_id: int = Field(..., title="ID del Abogado Responsable", examples=[1])
+    # Si no se envía, el backend asigna al usuario que crea el litigio.
+    usuario_responsable_id: Optional[int] = Field(None, title="ID del Abogado Responsable", examples=[1])
 
 class LitigioResponse(LitigioCreate):
     id: int

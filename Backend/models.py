@@ -85,7 +85,14 @@ class Litigio(Base):
     actualizado_en = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     responsable = relationship("Usuario", back_populates="litigios")
-    historial = relationship("HistorialLitigio", back_populates="litigio")
+    # El borrado en cascada lo hace la base de datos (ON DELETE CASCADE en historial_litigios.litigio_id).
+    # Sin passive_deletes/cascade, SQLAlchemy intentaría poner litigio_id = NULL (columna NOT NULL) y fallaría.
+    historial = relationship(
+        "HistorialLitigio",
+        back_populates="litigio",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
     cliente = relationship("Cliente")
 
 class HistorialLitigio(Base):

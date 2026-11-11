@@ -9,6 +9,18 @@ from security import get_current_user, require_admin
 router = APIRouter(prefix="/contratos", tags=["4. Contratos"])
 
 
+def _validar_datos(datos: dict) -> None:
+    """Reglas de negocio que el esquema no comprueba (el esquema también se usa para respuestas)."""
+    firma = datos.get("fecha_firma")
+    vencimiento = datos.get("fecha_vencimiento")
+    if firma and vencimiento and vencimiento < firma:
+        raise HTTPException(status_code=400, detail="La fecha de vencimiento no puede ser anterior a la fecha de firma.")
+
+    monto = datos.get("monto_operacion")
+    if monto is not None and monto < 0:
+        raise HTTPException(status_code=400, detail="El monto de la operación no puede ser negativo.")
+
+
 @router.post("", response_model=schemas.ContratoResponse, tags=["4. Contratos"])
 def crear_contrato(
     contrato: schemas.ContratoCreate,
@@ -19,7 +31,14 @@ def crear_contrato(
     if current_user.rol == models.RolUsuario.viewer:
         raise HTTPException(status_code=403, detail="Acceso denegado. Los usuarios de solo lectura no pueden crear contratos.")
 
-    nuevo_contrato = models.Contrato(**contrato.model_dump())
+    datos = contrato.model_dump()
+    _validar_datos(datos)
+
+    # Si no se indica responsable, se asigna al usuario que registra el contrato
+    if datos.get("usuario_responsable_id") is None:
+        datos["usuario_responsable_id"] = current_user.id
+
+    nuevo_contrato = models.Contrato(**datos)
     db.add(nuevo_contrato)
     try:
         db.commit()
@@ -54,7 +73,13 @@ def actualizar_contrato(
     if not contrato:
         raise HTTPException(status_code=404, detail="Contrato no encontrado")
 
+    _validar_datos(datos.model_dump())
+
     campos = datos.model_dump(exclude_unset=True)
+    # Enviar un responsable vacío no debe borrar el responsable que ya tiene el contrato
+    if campos.get("usuario_responsable_id") is None:
+        campos.pop("usuario_responsable_id", None)
+
     columnas_validas = {c.name for c in models.Contrato.__table__.columns}
     for clave, valor in campos.items():
         if clave in columnas_validas and clave != "id":
