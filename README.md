@@ -129,7 +129,7 @@ docker-compose up -d
 
 ```
 
-*Si tu Docker es reciente, el comando equivalente es `docker compose up -d`. La primera vez, el contenedor crea las tablas automáticamente con `db-init/init.sql`; espera unos segundos a que PostgreSQL termine de iniciar antes de arrancar el backend.*
+*Si tu Docker es reciente, el comando equivalente es `docker compose up -d`. La primera vez, el contenedor crea las tablas automáticamente con `db-init/init.sql`; espera unos segundos a que PostgreSQL termine de iniciar antes de arrancar el backend. Si ya tienes otro PostgreSQL usando el puerto 5432, ciérralo o cambia el puerto en `docker-compose.yml` (y en `DATABASE_URL`).*
 
 > **Nota de limpieza:** Si necesitas reiniciar el entorno y empezar con una base de datos totalmente vacía desde cero, ejecuta `docker-compose down -v` antes de volver a levantar los contenedores.
 
@@ -139,7 +139,7 @@ docker-compose up -d
 
 cd Backend
 
-python -m venv .venv
+python -m venv .venv   # en Linux/Mac, si `python` no existe, usa `python3`
 
 # Activar entorno (Windows: .venv\Scripts\activate | Mac/Linux: source .venv/bin/activate)
 
