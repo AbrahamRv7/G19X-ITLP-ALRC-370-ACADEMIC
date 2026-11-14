@@ -209,6 +209,23 @@ pytest tests/ -v
 
 ---
 
+## 🧭 Limitaciones y Trabajo Futuro
+
+Este es un MVP académico. Las siguientes mejoras están identificadas y no se incluyeron en esta versión:
+
+- **Migraciones de base de datos:** las tablas se crean con `db-init/init.sql` (Docker) y `create_all` (SQLAlchemy). Para cambios de esquema en producción se recomienda incorporar **Alembic**.
+- **Paginación:** el listado de clientes admite `skip` y `limit`; contratos y litigios devuelven todos los registros.
+- **Seguridad de acceso:** no hay límite de intentos de inicio de sesión ni cierre de sesión en el servidor (los tokens JWT caducan por tiempo). El listado de usuarios es visible para cualquier rol autenticado.
+- **Precisión monetaria:** los montos se manejan como números decimales de punto flotante; para contabilidad formal conviene usar `Decimal`/`NUMERIC`.
+- **Fechas:** no se manejan zonas horarias de forma explícita.
+- **Detalle de juicio:** las pantallas de detalle y actualización de un juicio reciben sus datos desde la navegación; recargar la página puede perderlos. Falta un endpoint `GET /litigios/{id}`.
+- **Rendimiento de métricas:** algunas consultas del dashboard se repiten por registro y pueden optimizarse con consultas agregadas.
+- **Indicadores del dashboard:** hay diferencias menores entre algunas cifras que se calculan de forma distinta en cada vista.
+- **Pruebas:** las pruebas automáticas cubren permisos por rol, historial de litigios y el asistente; falta cobertura del frontend.
+- **Asistente jurídico:** funciona con reglas y palabras clave; una fase futura podría integrar un modelo de lenguaje.
+
+---
+
 ## 👨‍💻 Autor
 
 **Abraham Rivera** | Estudiante de 8vo Semestre | Ingeniería en Sistemas Computacionales | Tecnológico Nacional de México / Instituto Tecnológico de La Piedad
